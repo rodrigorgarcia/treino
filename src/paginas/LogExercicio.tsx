@@ -1,0 +1,279 @@
+import { useState } from 'react'
+import { Navigate, useNavigate, useParams } from 'react-router'
+import { Stepper } from '../componentes/Stepper'
+import { BotaoPrimario, BotaoSecundario, Cabecalho, Carregando, Chip, Erro, Pagina, Rotulo } from '../componentes/ui'
+import {
+  mensagemDeErro, useApagarSerie, useAtualizarSerie, useCatalogo, useConcluirExercicio, useRegistrarSerie, useRegistro,
+  type ValoresSerie,
+} from '../lib/api'
+import {
+  DIFICULDADES, dataCurta, formatarSerie, haQuanto, numero, resumoSeries, rotuloDificuldade, sufixoLado, unidadeCarga,
+} from '../lib/formato'
+import type { Dificuldade, ItemCatalogo, Registro, Serie } from '../lib/tipos'
+import { useSessao } from './useSessao'
+
+export default function LogExercicio() {
+  const sessao = useSessao()
+  const { exercicioId = '' } = useParams()
+  const catalogo = useCatalogo()
+  const registro = useRegistro(sessao.id, exercicioId)
+
+  if (catalogo.isPending || registro.isPending) return <Carregando />
+  const ex = catalogo.data?.find((e) => e.id === exercicioId)
+  if (!ex) return catalogo.isFetching ? <Carregando /> : <Navigate to="/sessao" replace />
+  return <Conteudo key={exercicioId} sessaoId={sessao.id} ex={ex} registro={registro.data ?? null} />
+}
+
+interface Valores {
+  reps: number | null
+  carga: number | null
+  duracaoMin: number | null
+  distanciaKm: number | null
+  andares: number | null
+}
+
+function deSerie(s: Serie): Valores {
+  return {
+    reps: s.reps,
+    carga: s.carga_kg,
+    duracaoMin: s.duracao_s === null ? null : Math.round(s.duracao_s / 60),
+    distanciaKm: s.distancia_m === null ? null : s.distancia_m / 1000,
+    andares: s.andares,
+  }
+}
+
+// 1ª série = 1ª série da última vez; as seguintes = a série que acabou de ser registrada.
+function valoresIniciais(ex: ItemCatalogo, series: Serie[]): Valores {
+  const ultimaHoje = series[series.length - 1]
+  if (ultimaHoje) return deSerie(ultimaHoje)
+  if (ex.tipo === 'cardio') {
+    return {
+      reps: null,
+      carga: null,
+      duracaoMin: ex.ultima_duracao_s === null ? 30 : Math.round(ex.ultima_duracao_s / 60),
+      distanciaKm: ex.ultima_distancia_m === null ? null : ex.ultima_distancia_m / 1000,
+      andares: ex.ultima_andares,
+    }
+  }
+  return { reps: ex.ultima_reps?.[0] ?? 12, carga: ex.ultima_cargas_kg?.[0] ?? null, duracaoMin: null, distanciaKm: null, andares: null }
+}
+
+function paraBanco(ex: ItemCatalogo, v: Valores): ValoresSerie {
+  if (ex.tipo === 'cardio') {
+    return {
+      reps: null,
+      carga_kg: null,
+      duracao_s: v.duracaoMin === null ? null : Math.round(v.duracaoMin * 60),
+      distancia_m: v.distanciaKm === null ? null : Math.round(v.distanciaKm * 1000),
+      andares: v.andares,
+    }
+  }
+  return {
+    reps: v.reps ?? 0,
+    carga_kg: ex.tipo === 'peso_corporal' ? null : v.carga,
+    duracao_s: null,
+    distancia_m: null,
+    andares: null,
+  }
+}
+
+function Conteudo({ sessaoId, ex, registro }: { sessaoId: string; ex: ItemCatalogo; registro: Registro | null }) {
+  const navigate = useNavigate()
+  const series = registro?.series ?? []
+  const [valores, setValores] = useState<Valores>(() => valoresIniciais(ex, series))
+  const [editando, setEditando] = useState<Serie | null>(null)
+  const [dificuldade, setDificuldade] = useState<Dificuldade | null>(registro?.dificuldade ?? null)
+  const [observacao, setObservacao] = useState(registro?.observacao ?? '')
+
+  const registrar = useRegistrarSerie(sessaoId, ex.id)
+  const atualizar = useAtualizarSerie(sessaoId, ex.id)
+  const apagar = useApagarSerie(sessaoId, ex.id)
+  const concluir = useConcluirExercicio(sessaoId, ex.id)
+  const erro = registrar.error ?? atualizar.error ?? apagar.error ?? concluir.error
+
+  const mudar = (campo: keyof Valores) => (v: number | null) => setValores((atual) => ({ ...atual, [campo]: v }))
+  const numeroDaSerie = editando ? editando.numero : series.length + 1
+  const ocupado = registrar.isPending || atualizar.isPending || apagar.isPending
+  const vazio = ex.tipo === 'cardio' ? valores.duracaoMin === null && valores.distanciaKm === null : valores.reps === null
+
+  const ultimaVez =
+    ex.ultima_em &&
+    resumoSeries(ex, {
+      reps: ex.ultima_reps ?? [],
+      cargas: ex.ultima_cargas_kg ?? [],
+      duracao_s: ex.ultima_duracao_s,
+      distancia_m: ex.ultima_distancia_m,
+      andares: ex.ultima_andares,
+    })
+  const dicaSerie =
+    ex.tipo !== 'cardio' && ex.ultima_reps && numeroDaSerie <= ex.ultima_reps.length
+      ? 'última vez: ' +
+        formatarSerie(ex, {
+          reps: ex.ultima_reps[numeroDaSerie - 1],
+          carga_kg: ex.ultima_cargas_kg?.[numeroDaSerie - 1] ?? null,
+          duracao_s: null,
+          distancia_m: null,
+          andares: null,
+        })
+      : null
+
+  // Ao sair da edição, a próxima série volta a partir da última registrada.
+  function sairDaEdicao(restantes = series) {
+    setEditando(null)
+    setValores(valoresIniciais(ex, restantes))
+  }
+
+  function salvarSerie() {
+    const dados = paraBanco(ex, valores)
+    if (!editando) return registrar.mutate(dados)
+    const editada: Serie = { ...editando, ...dados }
+    atualizar.mutate({ id: editando.id, ...dados }, { onSuccess: () => sairDaEdicao(series.map((s) => (s.id === editada.id ? editada : s))) })
+  }
+
+  function concluirExercicio() {
+    const obs = observacao.trim() || null
+    const mudou = dificuldade !== (registro?.dificuldade ?? null) || obs !== (registro?.observacao ?? null)
+    if (registro?.id && mudou) {
+      concluir.mutate({ registroId: registro.id, dificuldade, observacao: obs }, { onSuccess: () => navigate('/sessao') })
+    } else {
+      navigate('/sessao')
+    }
+  }
+
+  const carga = unidadeCarga(ex.tipo)
+  const lado = sufixoLado(ex.reps_por_lado, ex.regiao)
+
+  return (
+    <>
+      <Cabecalho voltar="/sessao" titulo={ex.nome} />
+      <Pagina>
+        <p className="-mt-1 mb-3 text-sm text-suave">
+          {ex.aparelho ?? ex.grupo}
+          {ex.tipo !== 'cardio' && ex.tipo !== 'peso_corporal' && ` · passo ${numero(ex.incremento_kg)} kg`}
+        </p>
+
+        {ex.nota && <p className="mb-3 rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm text-alerta">{ex.nota}</p>}
+
+        <div className="mb-4 text-sm text-fraco" data-testid="ultima-vez">
+          {ultimaVez ? (
+            <>
+              <div>
+                Última vez · {dataCurta(ex.ultima_em!)}, {haQuanto(ex.ultima_em!)}
+              </div>
+              <div className="text-suave">
+                {ultimaVez}
+                {ex.ultima_dificuldade && ` · ${rotuloDificuldade(ex.ultima_dificuldade)}`}
+              </div>
+              {ex.ultima_observacao && <div className="italic">“{ex.ultima_observacao}”</div>}
+            </>
+          ) : (
+            'Primeira vez neste exercício.'
+          )}
+        </div>
+
+        <Erro>{erro && mensagemDeErro(erro)}</Erro>
+
+        <section className={`mb-5 space-y-5 rounded-3xl border bg-cartao p-4 ${editando ? 'border-alerta/50' : 'border-borda'}`}>
+          <div className="flex items-baseline justify-between">
+            <span className="text-lg font-semibold">{editando ? `Editando série ${numeroDaSerie}` : `Série ${numeroDaSerie}`}</span>
+            {dicaSerie && <span className="text-sm text-fraco">{dicaSerie}</span>}
+          </div>
+
+          {ex.tipo === 'cardio' ? (
+            <>
+              <Stepper rotulo="Duração" valor={valores.duracaoMin} passo={1} sufixo="min" onChange={mudar('duracaoMin')} />
+              <Stepper rotulo="Distância" valor={valores.distanciaKm} passo={0.1} sufixo="km" onChange={mudar('distanciaKm')} />
+              <Stepper rotulo="Andares" valor={valores.andares} passo={1} onChange={mudar('andares')} />
+            </>
+          ) : (
+            <>
+              <Stepper rotulo="Reps" valor={valores.reps} passo={1} sufixo={lado ? `reps${lado}` : 'reps'} onChange={mudar('reps')} />
+              {ex.tipo !== 'peso_corporal' && (
+                <Stepper
+                  rotulo="Carga"
+                  valor={valores.carga}
+                  passo={ex.incremento_kg}
+                  prefixo={carga.prefixo}
+                  sufixo={carga.sufixo}
+                  onChange={mudar('carga')}
+                />
+              )}
+            </>
+          )}
+
+          {editando ? (
+            <div className="grid grid-cols-3 gap-2">
+              <BotaoSecundario onClick={() => sairDaEdicao()} disabled={ocupado}>
+                Cancelar
+              </BotaoSecundario>
+              <BotaoSecundario
+                className="text-perigo"
+                disabled={ocupado}
+                onClick={() => apagar.mutate(editando.id, { onSuccess: () => sairDaEdicao(series.filter((s) => s.id !== editando.id)) })}
+              >
+                Apagar
+              </BotaoSecundario>
+              <BotaoPrimario className="h-12 rounded-xl text-base" onClick={salvarSerie} disabled={ocupado || vazio}>
+                Salvar
+              </BotaoPrimario>
+            </div>
+          ) : (
+            <BotaoPrimario onClick={salvarSerie} disabled={ocupado || vazio}>
+              Registrar série {numeroDaSerie}
+            </BotaoPrimario>
+          )}
+        </section>
+
+        {series.length > 0 && (
+          <section className="mb-6">
+            <Rotulo>Hoje</Rotulo>
+            <ul className="divide-y divide-borda overflow-hidden rounded-2xl border border-borda bg-cartao">
+              {series.map((s) => (
+                <li key={s.id}>
+                  <button
+                    disabled={s.id.startsWith('provisoria-') || ocupado}
+                    onClick={() => {
+                      setEditando(s)
+                      setValores(deSerie(s))
+                    }}
+                    className={`flex w-full items-center gap-4 px-4 py-3 text-left active:bg-cartao-2 ${editando?.id === s.id ? 'bg-alerta/10' : ''}`}
+                  >
+                    <span className="w-5 text-fraco tabular-nums">{s.numero}</span>
+                    <span className="flex-1 text-lg tabular-nums">{formatarSerie(ex, s)}</span>
+                    <span className="text-sm text-fraco">editar</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <section>
+          <Rotulo>Como foi?</Rotulo>
+          <div className="mb-3 flex flex-wrap gap-2">
+            {DIFICULDADES.map((d) => (
+              <Chip key={d.valor} ativo={dificuldade === d.valor} onClick={() => setDificuldade(dificuldade === d.valor ? null : d.valor)}>
+                {d.rotulo}
+              </Chip>
+            ))}
+          </div>
+          <textarea
+            placeholder="Observação (opcional)"
+            aria-label="Observação"
+            value={observacao}
+            onChange={(e) => setObservacao(e.target.value)}
+            rows={2}
+            className="mb-4 w-full rounded-xl border border-borda bg-cartao px-4 py-3 outline-none focus:border-acento"
+          />
+          <BotaoSecundario
+            className="w-full"
+            onClick={concluirExercicio}
+            disabled={concluir.isPending || registrar.isPending || (series.length > 0 && !registro?.id)}
+          >
+            {series.length > 0 ? 'Concluir exercício' : 'Voltar sem registrar'}
+          </BotaoSecundario>
+        </section>
+      </Pagina>
+    </>
+  )
+}

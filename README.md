@@ -6,4 +6,17 @@ App (PWA) para registrar treinos de academia: iniciar sessão, registrar cada ex
 - **Banco:** [supabase/migrations/](supabase/migrations/), com schema, RLS, views e catálogo inicial de 55 exercícios
 - **Histórico:** [supabase/importacao/historico.sql](supabase/importacao/historico.sql), gerado de [docs/referencia/treino_log.md](docs/referencia/treino_log.md) por [scripts/importar_log.py](scripts/importar_log.py)
 
-Status: banco aplicado no Supabase. Falta rodar a migração da remada supinada e importar o histórico (ver [docs/PLANO.md](docs/PLANO.md), seção 12).
+## Rodar
+
+```sh
+cp .env.example .env.local   # preencha URL e chave publishable do Supabase
+npm install
+npm run dev
+```
+
+`npm run build` gera o PWA em `dist/`. Para publicar na Vercel, veja [docs/PLANO.md](docs/PLANO.md), seção 13.
+
+## Status
+
+- Fase 0 (banco) e fase 1 (Supabase + histórico importado) prontas.
+- Fase 2 (registro) pronta no código e testada de ponta a ponta contra uma cópia local do banco. Falta publicar e usar num treino real.

@@ -343,22 +343,23 @@ Regras de conversão:
 - **Front:** Vite + React + TypeScript. PWA via `vite-plugin-pwa` (manifest, ícone, modo standalone). Tailwind e React Router.
 - **Dados:** `supabase-js` com TanStack Query. A série aparece na tela na hora e é gravada em segundo plano. Se a gravação falhar, aparece um aviso com "tentar de novo".
 - **Tipos:** gerados do banco com `supabase gen types typescript`.
-- **Login:** e-mail + **código de 6 dígitos** (OTP), não link mágico. No iPhone, o PWA instalado não divide o login com o Safari, então o link abriria no lugar errado. O login fica salvo, então você entra uma vez só.
+- **Login:** e-mail + **senha**, feito dentro do próprio PWA. O login fica salvo, então você entra uma vez por aparelho. Mudou do plano original (código por e-mail) porque o e-mail padrão do Supabase tem limite baixo de envios e exige configurar o template; com senha, não depende de e-mail nenhum. Link mágico continua descartado: no iPhone, o PWA instalado não divide o login com o Safari.
 - **Hospedagem:** Vercel, no plano gratuito, com deploy a cada push na `main`.
 - **Interface:** feita para o celular. Botões de ≥ 56 px, números grandes, tema escuro e ações principais na metade de baixo da tela, para usar com uma mão.
 - **Fuso:** datas exibidas em `America/Sao_Paulo`.
 
-Estrutura proposta:
+Estrutura:
 
 ```
 src/
-  pages/        Inicio, Sessao, LogExercicio, EncerrarSessao,
-                Sessoes, SessaoDetalhe, ExercicioHistorico, Catalogo
-  components/   Stepper, ChipsDificuldade, ResumoSeries, UltimaVez, …
-  lib/          supabase.ts, queries.ts, formato.ts  ("12+10+8 · 57 kg", "+60 kg", "/perna")
+  paginas/      Login, Inicio, SessaoLayout, Sessao, LogExercicio, NovoExercicio, Encerrar
+  componentes/  Stepper (+ / −), ui (cabeçalho, botões, chips, cronômetro)
+  lib/          supabase.ts, api.ts (consultas e gravações), formato.ts ("12+10+8 · 57 kg", "+60 kg", "/perna"), tipos.ts
+public/         ícones do PWA
 scripts/        importar_log.py
 supabase/
   migrations/
+  importacao/
 docs/
 ```
 
@@ -367,8 +368,8 @@ docs/
 | Fase | Entrega | Pronto quando |
 |---|---|---|
 | **0. Banco** ✅ | Schema, RLS, views, catálogo, testes locais | Feito |
-| **1. Supabase + histórico** ⏳ | Criar o projeto, aplicar as migrações, criar o usuário, rodar o seed e importar as 37 sessões | `v_catalogo` mostra a última vez correta nos exercícios conferidos |
-| **2. Registro (MVP)** | PWA com login, iniciar e continuar sessão, navegação, tela de log, novo exercício, concluir e encerrar | Um treino real inteiro registrado só pelo app |
+| **1. Supabase + histórico** ✅ | Criar o projeto, aplicar as migrações, criar o usuário, rodar o seed e importar as 37 sessões | Feito em 11/10: 37 sessões, 307 exercícios, 898 séries |
+| **2. Registro (MVP)** ⏳ | PWA com login, iniciar e continuar sessão, navegação, tela de log, novo exercício, concluir e encerrar | Um treino real inteiro registrado só pelo app. Código pronto e testado de ponta a ponta contra uma cópia local do banco; falta publicar na Vercel e usar na academia |
 | **3. Consulta e edição** | Lista e detalhe de sessões, edição, histórico por exercício, catálogo editável | Corrigir um erro de uma sessão passada pelo app |
 | **4. Extras** | Backlog abaixo, por ordem de valor | — |
 
@@ -416,3 +417,24 @@ Ainda em aberto (nada disso bloqueia a importação; tudo dá para ajustar depoi
 4. No SQL Editor, rode `supabase/importacao/historico.sql`. Ele roda o seed do catálogo e importa as 37 sessões.
 
 Sem importar o histórico, o passo 4 vira `select public.seed_catalogo('<seu user id>');`.
+
+## 13. Como rodar e publicar o app
+
+**No computador:** copie `.env.example` para `.env.local`, preencha a URL e a chave publishable do Supabase (*Project Settings → API*) e rode `npm install` e `npm run dev`.
+
+**Na Vercel:**
+
+1. *Add New → Project* e importe o repositório `rodrigorgarcia/treino`. O preset Vite é detectado sozinho.
+2. Em *Environment Variables*, crie `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`.
+3. *Deploy*. O `vercel.json` já manda todas as rotas para o app.
+4. No iPhone, abra a URL no Safari → Compartilhar → *Adicionar à Tela de Início*.
+
+**No Supabase:** desligue novos cadastros em *Authentication → Sign In / Providers → Allow new users to sign up*. A chave publishable fica no app e é pública; com cadastro desligado, ninguém cria conta. O RLS já impede que uma conta veja dados de outra.
+
+**Trocar a senha** (pelo SQL Editor):
+
+```sql
+update auth.users
+set encrypted_password = extensions.crypt('SUA-NOVA-SENHA', extensions.gen_salt('bf'))
+where email = 'seu@email';
+```
