@@ -70,15 +70,16 @@ export function Cronometro({ desde }: { desde: string }) {
   return <span className="tabular-nums">{formatarDuracao(minutos)}</span>
 }
 
-export function Chip({ ativo, children, ...props }: { ativo: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
+// pequeno: chip de segundo nível (ex.: subgrupos abaixo das regiões), com destaque mais leve.
+export function Chip({ ativo, pequeno = false, children, ...props }: { ativo: boolean; pequeno?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
+  const tamanho = pequeno ? 'h-10 px-3' : 'h-11 px-4 font-medium'
+  const cor = ativo
+    ? pequeno
+      ? 'border-acento bg-acento/15 text-acento'
+      : 'border-acento bg-acento text-acento-escuro'
+    : 'border-borda bg-cartao text-suave active:bg-cartao-2'
   return (
-    <button
-      {...props}
-      aria-pressed={ativo}
-      className={`h-11 rounded-full border px-4 text-sm font-medium whitespace-nowrap ${
-        ativo ? 'border-acento bg-acento text-acento-escuro' : 'border-borda bg-cartao text-suave active:bg-cartao-2'
-      }`}
-    >
+    <button {...props} aria-pressed={ativo} className={`rounded-full border text-sm whitespace-nowrap ${tamanho} ${cor}`}>
       {children}
     </button>
   )

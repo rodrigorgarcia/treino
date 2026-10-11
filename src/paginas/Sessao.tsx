@@ -33,6 +33,7 @@ export default function Sessao() {
   const execucoes = useExecucoes(sessao.id)
   const [aba, setAba] = useState<Regiao>(() => lerPreferencia('treino.aba', 'superiores'))
   const [modo, setModo] = useState<Modo>(() => lerPreferencia('treino.modo', 'grupo'))
+  const [subgrupo, setSubgrupo] = useState<string | null>(() => lerPreferencia('treino.subgrupo', '') || null)
   const [busca, setBusca] = useState('')
 
   const feitos = useMemo(() => {
@@ -40,6 +41,19 @@ export default function Sessao() {
     for (const e of execucoes.data ?? []) if (e.n_series > 0) mapa.set(e.exercicio_id, e)
     return mapa
   }, [execucoes.data])
+
+  // Grupos da região escolhida, na ordem do catálogo (Peito, Costas, Ombros…).
+  const subgrupos = useMemo(() => {
+    const ordem = new Map<string, number>()
+    for (const e of catalogo.data ?? []) if (e.regiao === aba) ordem.set(e.grupo, e.grupo_ordem)
+    return [...ordem.entries()].sort((a, b) => a[1] - b[1]).map(([nome]) => nome)
+  }, [catalogo.data, aba])
+  const filtroGrupo = subgrupo && subgrupos.includes(subgrupo) ? subgrupo : null
+
+  function escolherSubgrupo(grupo: string | null) {
+    setSubgrupo(grupo)
+    salvarPreferencia('treino.subgrupo', grupo ?? '')
+  }
 
   const secoes = useMemo(() => {
     const lista = catalogo.data ?? []
@@ -49,7 +63,7 @@ export default function Sessao() {
     }
     const mapa = new Map<string, { titulo: string; ordem: number | string; itens: ItemCatalogo[] }>()
     for (const e of lista) {
-      if (modo === 'grupo' && e.regiao !== aba) continue
+      if (modo === 'grupo' && (e.regiao !== aba || (filtroGrupo && e.grupo !== filtroGrupo))) continue
       const titulo = modo === 'grupo' ? e.grupo : (e.aparelho ?? 'Sem aparelho')
       const ordem = modo === 'grupo' ? e.grupo_ordem : titulo
       if (!mapa.has(titulo)) mapa.set(titulo, { titulo, ordem, itens: [] })
@@ -58,7 +72,7 @@ export default function Sessao() {
     return [...mapa.values()]
       .sort((a, b) => (typeof a.ordem === 'number' && typeof b.ordem === 'number' ? a.ordem - b.ordem : String(a.ordem).localeCompare(String(b.ordem), 'pt-BR')))
       .map((s) => ({ ...s, itens: s.itens.sort(porIndice) }))
-  }, [catalogo.data, busca, modo, aba])
+  }, [catalogo.data, busca, modo, aba, filtroGrupo])
 
   const feitosHoje = (catalogo.data ?? []).filter((e) => feitos.has(e.id))
 
@@ -119,12 +133,25 @@ export default function Sessao() {
                     onClick={() => {
                       setAba(r.valor)
                       salvarPreferencia('treino.aba', r.valor)
+                      escolherSubgrupo(null)
                     }}
                   >
                     {r.rotulo}
                   </Chip>
                 ))}
             </div>
+            {modo === 'grupo' && subgrupos.length > 1 && (
+              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+                <Chip pequeno ativo={!filtroGrupo} onClick={() => escolherSubgrupo(null)}>
+                  Todos
+                </Chip>
+                {subgrupos.map((g) => (
+                  <Chip key={g} pequeno ativo={filtroGrupo === g} onClick={() => escolherSubgrupo(filtroGrupo === g ? null : g)}>
+                    {g}
+                  </Chip>
+                ))}
+              </div>
+            )}
             <div className="flex items-center gap-2 text-sm text-fraco">
               Agrupar por
               {(['grupo', 'aparelho'] as const).map((m) => (
