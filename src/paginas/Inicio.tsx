@@ -83,6 +83,13 @@ export default function Inicio() {
           })}
         </ul>
 
+        <Link
+          to="/exercicios"
+          className="mt-4 block rounded-2xl border border-borda bg-cartao px-4 py-3 text-center font-medium active:bg-cartao-2"
+        >
+          Exercícios e evolução
+        </Link>
+
         <button onClick={() => supabase.auth.signOut()} className="mt-10 w-full py-3 text-sm text-fraco">
           Sair
         </button>

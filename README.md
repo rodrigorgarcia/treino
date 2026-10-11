@@ -20,4 +20,4 @@ npm run dev
 
 - Fase 0 (banco) e fase 1 (Supabase + histórico importado) prontas.
 - Fase 2 (registro) pronta e no ar no preview do Netlify, já usando o Supabase real.
-- Fase 3 (consulta) em andamento: histórico com busca e detalhe da sessão prontos.
+- Fase 3 (consulta) em andamento: histórico com busca, detalhe da sessão e histórico por exercício com gráfico de evolução prontos.

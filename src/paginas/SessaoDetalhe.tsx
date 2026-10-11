@@ -1,4 +1,4 @@
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { Cabecalho, Carregando, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useSessaoDetalhe } from '../lib/api'
 import { contarExercicios, dataLonga, formatarDuracao, minutosDoIntervalo, resumoSeries, rotuloDificuldade } from '../lib/formato'
@@ -65,19 +65,21 @@ function ItemExercicio({ x }: { x: DetalheExercicio }) {
   })
   const dificuldade = rotuloDificuldade(x.dificuldade)
   return (
-    <li className="px-4 py-3">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="min-w-0">
-          <span className="font-medium">
-            {ex.tipo === 'cardio' && '🏃 '}
-            {ex.nome}
+    <li>
+      <Link to={`/exercicios/${ex.id}`} className="block px-4 py-3 active:bg-cartao-2">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="min-w-0">
+            <span className="font-medium">
+              {ex.tipo === 'cardio' && '🏃 '}
+              {ex.nome}
+            </span>
+            <span className="ml-2 text-sm text-suave tabular-nums">{resumo}</span>
           </span>
-          <span className="ml-2 text-sm text-suave tabular-nums">{resumo}</span>
-        </span>
-        {dificuldade && <span className="shrink-0 text-sm text-suave">{dificuldade}</span>}
-      </div>
-      <div className="text-xs text-fraco">{ex.aparelhos?.nome ?? ex.grupos.nome}</div>
-      {x.observacao && <div className="mt-1 text-sm text-fraco italic">“{x.observacao}”</div>}
+          {dificuldade && <span className="shrink-0 text-sm text-suave">{dificuldade}</span>}
+        </div>
+        <div className="text-xs text-fraco">{ex.aparelhos?.nome ?? ex.grupos.nome}</div>
+        {x.observacao && <div className="mt-1 text-sm text-fraco italic">“{x.observacao}”</div>}
+      </Link>
     </li>
   )
 }

@@ -77,6 +77,7 @@ export interface Execucao {
   id: string
   sessao_id: string
   exercicio_id: string
+  sessao_iniciada_em: string
   iniciado_em: string
   dificuldade: Dificuldade | null
   observacao: string | null

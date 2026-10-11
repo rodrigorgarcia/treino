@@ -63,9 +63,15 @@ function resumoReps(reps: number[]): string {
 }
 
 // "31 min" em minutos redondos; "31:49" quando há segundos (ex.: tempo de prova).
-function formatarTempo(segundos: number): string {
+export function formatarTempo(segundos: number): string {
   if (segundos % 60 === 0) return `${segundos / 60} min`
   return `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`
+}
+
+// Ritmo de corrida: segundos por km → "6:21 /km".
+export function formatarRitmo(segundosPorKm: number): string {
+  const s = Math.round(segundosPorKm)
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} /km`
 }
 
 export function resumoCardio(duracaoS: number | null, distanciaM: number | null, andares: number | null): string {

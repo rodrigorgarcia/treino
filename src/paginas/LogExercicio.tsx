@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useNavigate, useParams } from 'react-router'
+import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { Stepper } from '../componentes/Stepper'
 import { BotaoPrimario, BotaoSecundario, Cabecalho, Carregando, Chip, Erro, Pagina, Rotulo } from '../componentes/ui'
 import {
@@ -157,8 +157,13 @@ function Conteudo({ sessaoId, ex, registro }: { sessaoId: string; ex: ItemCatalo
         <div className="mb-4 text-sm text-fraco" data-testid="ultima-vez">
           {ultimaVez ? (
             <>
-              <div>
-                Última vez · {dataCurta(ex.ultima_em!)}, {haQuanto(ex.ultima_em!)}
+              <div className="flex items-baseline justify-between gap-3">
+                <span>
+                  Última vez · {dataCurta(ex.ultima_em!)}, {haQuanto(ex.ultima_em!)}
+                </span>
+                <Link to={`/exercicios/${ex.id}`} className="shrink-0 text-acento">
+                  ver histórico
+                </Link>
               </div>
               <div className="text-suave">
                 {ultimaVez}

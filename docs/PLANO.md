@@ -370,7 +370,7 @@ docs/
 | **0. Banco** ✅ | Schema, RLS, views, catálogo, testes locais | Feito |
 | **1. Supabase + histórico** ✅ | Criar o projeto, aplicar as migrações, criar o usuário, rodar o seed e importar as 37 sessões | Feito em 11/10: 37 sessões, 307 exercícios, 898 séries |
 | **2. Registro (MVP)** ⏳ | PWA com login, iniciar e continuar sessão, navegação, tela de log, novo exercício, concluir e encerrar | Um treino real inteiro registrado só pelo app. Código pronto e testado de ponta a ponta contra uma cópia local do banco; falta publicar no Netlify e usar na academia |
-| **3. Consulta e edição** ⏳ | Lista e detalhe de sessões, edição, histórico por exercício, catálogo editável | Corrigir um erro de uma sessão passada pelo app. Histórico (busca, filtro por região) e detalhe prontos; faltam edição, histórico por exercício e catálogo |
+| **3. Consulta e edição** ⏳ | Lista e detalhe de sessões, edição, histórico por exercício, catálogo editável | Corrigir um erro de uma sessão passada pelo app. Histórico (busca, filtro por região), detalhe e histórico por exercício (indicadores + gráfico de evolução) prontos; faltam edição e catálogo |
 | **4. Extras** | Backlog abaixo, por ordem de valor | — |
 
 Backlog (fase 4):

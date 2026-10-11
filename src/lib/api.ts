@@ -22,6 +22,7 @@ export const chaves = {
   grupos: ['grupos'] as const,
   aparelhos: ['aparelhos'] as const,
   historico: ['historico'] as const,
+  historicoExercicio: (id: string) => ['historico-exercicio', id] as const,
   sessaoDetalhe: (id: string) => ['sessao-detalhe', id] as const,
 }
 
@@ -51,6 +52,23 @@ export function useHistorico() {
     queryFn: () =>
       rodar<ResumoSessao[]>(
         supabase.from('v_sessoes').select('*').not('encerrada_em', 'is', null).order('iniciada_em', { ascending: false }),
+      ),
+  })
+}
+
+// Todas as vezes que o exercício foi feito (sessões encerradas), da mais recente para a mais antiga.
+export function useHistoricoExercicio(id: string) {
+  return useQuery({
+    queryKey: chaves.historicoExercicio(id),
+    queryFn: () =>
+      rodar<Execucao[]>(
+        supabase
+          .from('v_execucoes')
+          .select('*')
+          .eq('exercicio_id', id)
+          .not('sessao_encerrada_em', 'is', null)
+          .gt('n_series', 0)
+          .order('sessao_iniciada_em', { ascending: false }),
       ),
   })
 }

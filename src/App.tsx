@@ -5,6 +5,8 @@ import { Navigate, Route, Routes } from 'react-router'
 import { Carregando } from './componentes/ui'
 import { supabase } from './lib/supabase'
 import Encerrar from './paginas/Encerrar'
+import ExercicioHistorico from './paginas/ExercicioHistorico'
+import Exercicios from './paginas/Exercicios'
 import Inicio from './paginas/Inicio'
 import Login from './paginas/Login'
 import LogExercicio from './paginas/LogExercicio'
@@ -35,6 +37,8 @@ export default function App() {
       <Route path="/" element={<Inicio />} />
       <Route path="/sessoes" element={<Sessoes />} />
       <Route path="/sessoes/:id" element={<SessaoDetalhe />} />
+      <Route path="/exercicios" element={<Exercicios />} />
+      <Route path="/exercicios/:id" element={<ExercicioHistorico />} />
       <Route path="/sessao" element={<SessaoLayout />}>
         <Route index element={<Sessao />} />
         <Route path="exercicio/:exercicioId" element={<LogExercicio />} />
