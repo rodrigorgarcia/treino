@@ -1,7 +1,7 @@
 import { useParams } from 'react-router'
 import { Cabecalho, Carregando, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useSessaoDetalhe } from '../lib/api'
-import { dataLonga, formatarDuracao, minutosDoIntervalo, resumoSeries, rotuloDificuldade } from '../lib/formato'
+import { contarExercicios, dataLonga, formatarDuracao, minutosDoIntervalo, resumoSeries, rotuloDificuldade } from '../lib/formato'
 import type { DetalheExercicio } from '../lib/tipos'
 
 export default function SessaoDetalhe() {
@@ -23,7 +23,7 @@ export default function SessaoDetalhe() {
           <>
             <p className="mb-4 text-suave">
               {dataLonga(sessao.iniciada_em)}
-              {minutos > 0 && ` · ${formatarDuracao(minutos)}`} · {sessao.n_exercicios} exercícios
+              {minutos > 0 && ` · ${formatarDuracao(minutos)}`} · {contarExercicios(sessao.n_exercicios)}
             </p>
 
             {sessao.objetivo && (

@@ -27,6 +27,11 @@ export const TIPOS: { valor: TipoExercicio; rotulo: string }[] = [
   { valor: 'cardio', rotulo: 'Cardio' },
 ]
 
+// "1 exercício", "8 exercícios"
+export function contarExercicios(n: number): string {
+  return `${n} ${n === 1 ? 'exercício' : 'exercícios'}`
+}
+
 export function rotuloDificuldade(d: Dificuldade | null): string | null {
   return DIFICULDADES.find((x) => x.valor === d)?.rotulo ?? null
 }
@@ -57,9 +62,15 @@ function resumoReps(reps: number[]): string {
   return reps.join('+')
 }
 
+// "31 min" em minutos redondos; "31:49" quando há segundos (ex.: tempo de prova).
+function formatarTempo(segundos: number): string {
+  if (segundos % 60 === 0) return `${segundos / 60} min`
+  return `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`
+}
+
 export function resumoCardio(duracaoS: number | null, distanciaM: number | null, andares: number | null): string {
   const partes: string[] = []
-  if (duracaoS) partes.push(`${Math.round(duracaoS / 60)} min`)
+  if (duracaoS) partes.push(formatarTempo(duracaoS))
   if (distanciaM) partes.push(`${numero(distanciaM / 1000)} km`)
   if (andares) partes.push(`${andares} andares`)
   return partes.join(' · ') || '—'

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { BotaoPrimario, BotaoSecundario, Cabecalho, Carregando, Cronometro, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useCatalogo, useDescartarSessao, useEncerrarSessao, useExecucoes } from '../lib/api'
-import { resumoSeries, rotuloDificuldade, tituloSugerido } from '../lib/formato'
+import { contarExercicios, resumoSeries, rotuloDificuldade, tituloSugerido } from '../lib/formato'
 import { useSessao } from './useSessao'
 
 export default function Encerrar() {
@@ -36,7 +36,7 @@ export default function Encerrar() {
       <Pagina>
         <Erro>{erro && mensagemDeErro(erro)}</Erro>
         <p className="mb-4 text-suave">
-          Duração: <Cronometro desde={sessao.iniciada_em} /> · {feitos.length} exercícios
+          Duração: <Cronometro desde={sessao.iniciada_em} /> · {contarExercicios(feitos.length)}
         </p>
 
         {feitos.length === 0 ? (

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router'
 import { BotaoPrimario, Carregando, Cronometro, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useIniciarSessao, useSessaoAberta, useSessoesRecentes } from '../lib/api'
-import { dataCurta, formatarDuracao, haQuanto, horaCurta, minutosDoIntervalo } from '../lib/formato'
+import { contarExercicios, dataCurta, formatarDuracao, haQuanto, horaCurta, minutosDoIntervalo } from '../lib/formato'
 import { supabase } from '../lib/supabase'
 import { useAgora } from '../lib/useAgora'
 
@@ -75,7 +75,7 @@ export default function Inicio() {
                     <span className="shrink-0 text-sm text-suave tabular-nums">{dataCurta(s.iniciada_em)}</span>
                   </div>
                   <div className="text-sm text-fraco">
-                    {s.n_exercicios} exercícios{minutos > 0 && ` · ${formatarDuracao(minutos)}`}
+                    {contarExercicios(s.n_exercicios)}{minutos > 0 && ` · ${formatarDuracao(minutos)}`}
                   </div>
                 </Link>
               </li>

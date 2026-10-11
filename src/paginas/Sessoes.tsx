@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router'
 import { Cabecalho, Carregando, Chip, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useHistorico } from '../lib/api'
 import {
-  REGIOES, dataCurta, diaSemanaCurto, formatarDuracao, mesAno, minutosDoIntervalo, normalizar, resumoCardio,
+  REGIOES, contarExercicios, dataCurta, diaSemanaCurto, formatarDuracao, mesAno, minutosDoIntervalo, normalizar, resumoCardio,
 } from '../lib/formato'
 import type { Regiao, ResumoSessao } from '../lib/tipos'
 
@@ -110,7 +110,7 @@ function CartaoSessao({ s }: { s: ResumoSessao }) {
           <div className="flex items-baseline justify-between gap-3 text-sm text-suave">
             <span className="tabular-nums">{diaSemanaCurto(s.iniciada_em)}</span>
             <span>
-              {s.n_exercicios} exercícios{minutos > 0 && ` · ${formatarDuracao(minutos)}`}
+              {contarExercicios(s.n_exercicios)}{minutos > 0 && ` · ${formatarDuracao(minutos)}`}
             </span>
           </div>
           <div className="truncate font-medium">{s.titulo ?? 'Sessão'}</div>
