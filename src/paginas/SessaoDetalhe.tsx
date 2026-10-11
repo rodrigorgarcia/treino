@@ -68,7 +68,10 @@ function ItemExercicio({ x }: { x: DetalheExercicio }) {
     <li className="px-4 py-3">
       <div className="flex items-baseline justify-between gap-3">
         <span className="min-w-0">
-          <span className="font-medium">{ex.nome}</span>
+          <span className="font-medium">
+            {ex.tipo === 'cardio' && '🏃 '}
+            {ex.nome}
+          </span>
           <span className="ml-2 text-sm text-suave tabular-nums">{resumo}</span>
         </span>
         {dificuldade && <span className="shrink-0 text-sm text-suave">{dificuldade}</span>}

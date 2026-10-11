@@ -18,7 +18,15 @@ export interface ResumoSessao extends Sessao {
   duracao: string | null // intervalo do Postgres, ex.: "00:50:00"
   n_exercicios: number
   regioes: Regiao[]
-  exercicios: string[] // nomes, na ordem em que foram feitos
+  exercicios?: string[] // nomes, na ordem em que foram feitos (migração 20261011200000)
+  cardio?: ResumoCardio[] // migração 20261011210000
+}
+
+export interface ResumoCardio {
+  nome: string
+  duracao_s: number | null
+  distancia_m: number | null
+  andares: number | null
 }
 
 // sessao_exercicios com o exercício e as séries, para o detalhe da sessão

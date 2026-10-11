@@ -2,14 +2,16 @@ import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { Cabecalho, Carregando, Chip, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useHistorico } from '../lib/api'
-import { REGIOES, dataCurta, diaSemanaCurto, formatarDuracao, mesAno, minutosDoIntervalo, normalizar } from '../lib/formato'
+import {
+  REGIOES, dataCurta, diaSemanaCurto, formatarDuracao, mesAno, minutosDoIntervalo, normalizar, resumoCardio,
+} from '../lib/formato'
 import type { Regiao, ResumoSessao } from '../lib/tipos'
 
-const PREVIA = 4 // exercícios mostrados em cada cartão
+const PREVIA = 4 // exercícios de força mostrados em cada cartão
 
 // Texto em que a busca procura: título, objetivo, observação, exercícios e data.
 function textoDeBusca(s: ResumoSessao): string {
-  return normalizar([s.titulo, s.objetivo, s.observacao, ...s.exercicios, dataCurta(s.iniciada_em)].filter(Boolean).join(' '))
+  return normalizar([s.titulo, s.objetivo, s.observacao, ...(s.exercicios ?? []), dataCurta(s.iniciada_em)].filter(Boolean).join(' '))
 }
 
 export default function Sessoes() {
@@ -97,7 +99,10 @@ export default function Sessoes() {
 
 function CartaoSessao({ s }: { s: ResumoSessao }) {
   const minutos = minutosDoIntervalo(s.duracao)
-  const resto = s.exercicios.length - PREVIA
+  // O cardio tem linha própria (com tempo e distância); a prévia mostra só a força.
+  const cardio = s.cardio ?? []
+  const forca = (s.exercicios ?? []).filter((nome) => !cardio.some((c) => c.nome === nome))
+  const resto = forca.length - PREVIA
   return (
     <li>
       <Link to={`/sessoes/${s.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-cartao-2">
@@ -109,10 +114,17 @@ function CartaoSessao({ s }: { s: ResumoSessao }) {
             </span>
           </div>
           <div className="truncate font-medium">{s.titulo ?? 'Sessão'}</div>
-          <div className="truncate text-sm text-fraco">
-            {s.exercicios.slice(0, PREVIA).join(', ')}
-            {resto > 0 && ` +${resto}`}
-          </div>
+          {forca.length > 0 && (
+            <div className="truncate text-sm text-fraco">
+              {forca.slice(0, PREVIA).join(', ')}
+              {resto > 0 && ` +${resto}`}
+            </div>
+          )}
+          {cardio.map((c, i) => (
+            <div key={i} className="truncate text-sm text-suave">
+              🏃 {c.nome} · {resumoCardio(c.duracao_s, c.distancia_m, c.andares)}
+            </div>
+          ))}
         </div>
         <span className="text-2xl text-fraco">›</span>
       </Link>
