@@ -14,7 +14,7 @@ npm install
 npm run dev
 ```
 
-`npm run build` gera o PWA em `dist/`. Para publicar na Vercel, veja [docs/PLANO.md](docs/PLANO.md), seção 13.
+`npm run build` gera o PWA em `dist/`. Para publicar no Netlify, veja [docs/PLANO.md](docs/PLANO.md), seção 13.
 
 ## Status
 
