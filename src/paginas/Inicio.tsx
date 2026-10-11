@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { BotaoPrimario, Carregando, Cronometro, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useIniciarSessao, useSessaoAberta, useSessoesRecentes } from '../lib/api'
 import { dataCurta, formatarDuracao, haQuanto, horaCurta, minutosDoIntervalo } from '../lib/formato'
@@ -57,20 +57,27 @@ export default function Inicio() {
           </section>
         )}
 
-        <Rotulo>Sessões recentes</Rotulo>
+        <div className="flex items-baseline justify-between">
+          <Rotulo>Sessões recentes</Rotulo>
+          <Link to="/sessoes" className="mb-2 text-sm font-medium text-acento">
+            Ver todas
+          </Link>
+        </div>
         {recentes.isPending && <p className="text-fraco">Carregando…</p>}
         <ul className="divide-y divide-borda overflow-hidden rounded-2xl border border-borda bg-cartao">
           {recentes.data?.map((s) => {
             const minutos = minutosDoIntervalo(s.duracao)
             return (
-              <li key={s.id} className="px-4 py-3">
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="truncate font-medium">{s.titulo ?? 'Sessão'}</span>
-                  <span className="shrink-0 text-sm text-suave tabular-nums">{dataCurta(s.iniciada_em)}</span>
-                </div>
-                <div className="text-sm text-fraco">
-                  {s.n_exercicios} exercícios{minutos > 0 && ` · ${formatarDuracao(minutos)}`}
-                </div>
+              <li key={s.id}>
+                <Link to={`/sessoes/${s.id}`} className="block px-4 py-3 active:bg-cartao-2">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="truncate font-medium">{s.titulo ?? 'Sessão'}</span>
+                    <span className="shrink-0 text-sm text-suave tabular-nums">{dataCurta(s.iniciada_em)}</span>
+                  </div>
+                  <div className="text-sm text-fraco">
+                    {s.n_exercicios} exercícios{minutos > 0 && ` · ${formatarDuracao(minutos)}`}
+                  </div>
+                </Link>
               </li>
             )
           })}

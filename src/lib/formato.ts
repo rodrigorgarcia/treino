@@ -119,6 +119,28 @@ export function dataCurta(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: FUSO })
 }
 
+// "sábado, 4 de outubro de 2026"
+export function dataLonga(iso: string): string {
+  return new Date(iso).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: FUSO })
+}
+
+// "sáb. 04/10"
+export function diaSemanaCurto(iso: string): string {
+  const dia = new Date(iso).toLocaleDateString('pt-BR', { weekday: 'short', timeZone: FUSO })
+  return `${dia} ${dataCurta(iso)}`
+}
+
+// "Outubro de 2026"
+export function mesAno(iso: string): string {
+  const texto = new Date(iso).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: FUSO })
+  return texto.charAt(0).toUpperCase() + texto.slice(1)
+}
+
+// Para busca: minúsculas e sem acento ("Agachamento sumô" → "agachamento sumo").
+export function normalizar(texto: string): string {
+  return texto.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('pt-BR')
+}
+
 export function horaCurta(iso: string): string {
   return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: FUSO })
 }

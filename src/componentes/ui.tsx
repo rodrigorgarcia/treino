@@ -3,14 +3,26 @@ import { useNavigate } from 'react-router'
 import { formatarDuracao } from '../lib/formato'
 import { useAgora } from '../lib/useAgora'
 
-export function Cabecalho({ titulo, voltar, direita }: { titulo: ReactNode; voltar?: string; direita?: ReactNode }) {
+// voltarNoHistorico: volta para a tela anterior (ex.: início ou histórico); sem histórico, vai para `voltar`.
+export function Cabecalho({
+  titulo,
+  voltar,
+  voltarNoHistorico = false,
+  direita,
+}: {
+  titulo: ReactNode
+  voltar?: string
+  voltarNoHistorico?: boolean
+  direita?: ReactNode
+}) {
   const navigate = useNavigate()
+  const temAnterior = voltarNoHistorico && ((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0
   return (
     <header className="sticky top-0 z-10 border-b border-borda bg-fundo/95 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="flex h-14 items-center gap-1 px-4">
         {voltar && (
           <button
-            onClick={() => navigate(voltar)}
+            onClick={() => (temAnterior ? navigate(-1) : navigate(voltar))}
             aria-label="Voltar"
             className="-ml-3 grid h-11 w-11 place-items-center text-3xl leading-none text-suave"
           >

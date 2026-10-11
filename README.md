@@ -19,4 +19,5 @@ npm run dev
 ## Status
 
 - Fase 0 (banco) e fase 1 (Supabase + histórico importado) prontas.
-- Fase 2 (registro) pronta no código e testada de ponta a ponta contra uma cópia local do banco. Falta publicar e usar num treino real.
+- Fase 2 (registro) pronta e no ar no preview do Netlify, já usando o Supabase real.
+- Fase 3 (consulta) em andamento: histórico com busca e detalhe da sessão prontos.

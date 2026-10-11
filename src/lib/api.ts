@@ -3,7 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
 import type {
-  Aparelho, Dificuldade, Execucao, Grupo, ItemCatalogo, Registro, ResumoSessao, Serie, Sessao, TipoExercicio,
+  Aparelho, DetalheExercicio, Dificuldade, Execucao, Grupo, ItemCatalogo, Registro, ResumoSessao, Serie, Sessao,
+  TipoExercicio,
 } from './tipos'
 
 async function rodar<T>(consulta: PromiseLike<{ data: unknown; error: { message: string; code?: string } | null }>): Promise<T> {
@@ -20,6 +21,8 @@ export const chaves = {
   registro: (sessaoId: string, exercicioId: string) => ['registro', sessaoId, exercicioId] as const,
   grupos: ['grupos'] as const,
   aparelhos: ['aparelhos'] as const,
+  historico: ['historico'] as const,
+  sessaoDetalhe: (id: string) => ['sessao-detalhe', id] as const,
 }
 
 // ─── Leitura ─────────────────────────────────────────────────
@@ -38,6 +41,41 @@ export function useSessoesRecentes() {
       rodar<ResumoSessao[]>(
         supabase.from('v_sessoes').select('*').not('encerrada_em', 'is', null).order('iniciada_em', { ascending: false }).limit(5),
       ),
+  })
+}
+
+// Todas as sessões encerradas, da mais recente para a mais antiga.
+export function useHistorico() {
+  return useQuery({
+    queryKey: chaves.historico,
+    queryFn: () =>
+      rodar<ResumoSessao[]>(
+        supabase.from('v_sessoes').select('*').not('encerrada_em', 'is', null).order('iniciada_em', { ascending: false }),
+      ),
+  })
+}
+
+export function useSessaoDetalhe(id: string) {
+  return useQuery({
+    queryKey: chaves.sessaoDetalhe(id),
+    queryFn: async () => {
+      const [sessao, exercicios] = await Promise.all([
+        rodar<ResumoSessao | null>(supabase.from('v_sessoes').select('*').eq('id', id).maybeSingle()),
+        rodar<DetalheExercicio[]>(
+          supabase
+            .from('sessao_exercicios')
+            .select(
+              'id, iniciado_em, dificuldade, observacao, ' +
+                'exercicios(id, nome, tipo, reps_por_lado, grupos(nome, regiao), aparelhos(nome)), ' +
+                'series(numero, reps, carga_kg, duracao_s, distancia_m, andares)',
+            )
+            .eq('sessao_id', id)
+            .order('iniciado_em')
+            .order('numero', { referencedTable: 'series' }),
+        ),
+      ])
+      return { sessao, exercicios }
+    },
   })
 }
 

@@ -18,6 +18,24 @@ export interface ResumoSessao extends Sessao {
   duracao: string | null // intervalo do Postgres, ex.: "00:50:00"
   n_exercicios: number
   regioes: Regiao[]
+  exercicios: string[] // nomes, na ordem em que foram feitos
+}
+
+// sessao_exercicios com o exercício e as séries, para o detalhe da sessão
+export interface DetalheExercicio {
+  id: string
+  iniciado_em: string
+  dificuldade: Dificuldade | null
+  observacao: string | null
+  exercicios: {
+    id: string
+    nome: string
+    tipo: TipoExercicio
+    reps_por_lado: boolean
+    grupos: { nome: string; regiao: Regiao }
+    aparelhos: { nome: string } | null
+  }
+  series: Omit<Serie, 'id'>[]
 }
 
 // v_catalogo
