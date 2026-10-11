@@ -11,7 +11,10 @@ declare
   v_user uuid;
   v_faltando text;
 begin
-  if (select count(*) from auth.users) <> 1 then
+  if not exists (select 1 from auth.users) then
+    raise exception 'Nenhum usuário ainda. Crie o seu em Authentication → Users → Add user → Create new user (marque Auto Confirm User) e rode este arquivo de novo.';
+  end if;
+  if (select count(*) from auth.users) > 1 then
     raise exception 'Esperava exatamente 1 usuário em auth.users (há %).', (select count(*) from auth.users);
   end if;
   select id into v_user from auth.users;
