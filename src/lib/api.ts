@@ -1,10 +1,10 @@
 // Leitura e escrita no Supabase, com cache do TanStack Query.
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient, type QueryKey } from '@tanstack/react-query'
 import { supabase } from './supabase'
 import type {
-  Aparelho, DetalheExercicio, Dificuldade, Execucao, Grupo, ItemCatalogo, Registro, ResumoSessao, Serie, Sessao,
-  TipoExercicio,
+  Aparelho, AparelhoComExercicios, DetalheExercicio, Dificuldade, Execucao, Exercicio, Grupo, ItemCatalogo, Registro,
+  ResumoSessao, Serie, Sessao,
 } from './tipos'
 
 async function rodar<T>(consulta: PromiseLike<{ data: unknown; error: { message: string; code?: string } | null }>): Promise<T> {
@@ -17,10 +17,14 @@ export const chaves = {
   sessaoAberta: ['sessao-aberta'] as const,
   sessoesRecentes: ['sessoes-recentes'] as const,
   catalogo: ['catalogo'] as const,
+  arquivados: ['arquivados'] as const,
+  exercicio: (id: string) => ['exercicio', id] as const,
+  exercicioEdicao: (id: string) => ['exercicio-edicao', id] as const,
   execucoes: (sessaoId: string) => ['execucoes', sessaoId] as const,
   registro: (sessaoId: string, exercicioId: string) => ['registro', sessaoId, exercicioId] as const,
   grupos: ['grupos'] as const,
   aparelhos: ['aparelhos'] as const,
+  aparelho: (id: string) => ['aparelho', id] as const,
   historico: ['historico'] as const,
   historicoExercicio: (id: string) => ['historico-exercicio', id] as const,
   sessaoDetalhe: (id: string) => ['sessao-detalhe', id] as const,
@@ -105,6 +109,48 @@ export function useCatalogo() {
   })
 }
 
+// Um exercício do catálogo, mesmo arquivado (para o histórico e a edição).
+export function useExercicio(id: string) {
+  return useQuery({
+    queryKey: chaves.exercicio(id),
+    queryFn: () => rodar<ItemCatalogo | null>(supabase.from('v_catalogo').select('*').eq('id', id).maybeSingle()),
+  })
+}
+
+export function useArquivados() {
+  return useQuery({
+    queryKey: chaves.arquivados,
+    queryFn: () => rodar<ItemCatalogo[]>(supabase.from('v_catalogo').select('*').eq('arquivado', true).order('nome')),
+  })
+}
+
+// O exercício como está na tabela (passo próprio pode ser null) e em quantas sessões aparece.
+export function useExercicioEdicao(id: string) {
+  return useQuery({
+    queryKey: chaves.exercicioEdicao(id),
+    queryFn: async () => {
+      const [exercicio, usos] = await Promise.all([
+        rodar<Exercicio | null>(
+          supabase
+            .from('exercicios')
+            .select('id, nome, grupo_id, aparelho_id, tipo, reps_por_lado, incremento_kg, indice, nota, arquivado')
+            .eq('id', id)
+            .maybeSingle(),
+        ),
+        supabase
+          .from('sessao_exercicios')
+          .select('id', { count: 'exact', head: true })
+          .eq('exercicio_id', id)
+          .then(({ count, error }) => {
+            if (error) throw Object.assign(new Error(error.message), { code: error.code })
+            return count ?? 0
+          }),
+      ])
+      return { exercicio, usos }
+    },
+  })
+}
+
 export function useExecucoes(sessaoId: string) {
   return useQuery({
     queryKey: chaves.execucoes(sessaoId),
@@ -140,8 +186,24 @@ export function useGrupos() {
 export function useAparelhos() {
   return useQuery({
     queryKey: chaves.aparelhos,
-    queryFn: () => rodar<Aparelho[]>(supabase.from('aparelhos').select('id, nome, incremento_kg').order('nome')),
+    queryFn: () =>
+      rodar<Aparelho[]>(supabase.from('aparelhos').select('id, nome, incremento_kg, observacao, exercicios(count)').order('nome')),
     staleTime: Infinity,
+  })
+}
+
+export function useAparelho(id: string) {
+  return useQuery({
+    queryKey: chaves.aparelho(id),
+    queryFn: () =>
+      rodar<AparelhoComExercicios | null>(
+        supabase
+          .from('aparelhos')
+          .select('id, nome, incremento_kg, observacao, exercicios(id, nome, arquivado)')
+          .eq('id', id)
+          .order('nome', { referencedTable: 'exercicios' })
+          .maybeSingle(),
+      ),
   })
 }
 
@@ -273,26 +335,74 @@ export function useConcluirExercicio(sessaoId: string, exercicioId: string) {
 
 // ─── Catálogo ────────────────────────────────────────────────
 
-export interface NovoExercicio {
-  nome: string
-  grupo_id: string
-  aparelho_id: string | null
-  tipo: TipoExercicio
-  reps_por_lado: boolean
-}
+export type DadosExercicio = Omit<Exercicio, 'id' | 'arquivado'>
+export type DadosAparelho = Pick<Aparelho, 'nome' | 'incremento_kg' | 'observacao'>
 
 export function useCriarExercicio() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (v: NovoExercicio) => rodar<{ id: string }>(supabase.from('exercicios').insert(v).select('id').single()),
+    mutationFn: (v: DadosExercicio) => rodar<{ id: string }>(supabase.from('exercicios').insert(v).select('id').single()),
     // Espera o catálogo recarregar para a tela de log já encontrar o exercício novo.
     onSuccess: () => qc.invalidateQueries({ queryKey: chaves.catalogo, refetchType: 'all' }),
+  })
+}
+
+// Nome, grupo, aparelho e passo aparecem em várias telas: marca tudo como desatualizado e já
+// recarrega as `listas` para onde o app volta depois de salvar, para não mostrar o dado antigo.
+// telaAtual = false ao excluir: a tela que some não precisa recarregar.
+function recarregar(qc: QueryClient, listas: QueryKey[], telaAtual = true) {
+  return Promise.all([
+    qc.invalidateQueries({ refetchType: telaAtual ? 'active' : 'none' }),
+    ...listas.map((queryKey) => qc.invalidateQueries({ queryKey, refetchType: 'all' })),
+  ])
+}
+
+export function useAtualizarExercicio() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...campos }: { id: string } & Partial<DadosExercicio & { arquivado: boolean }>) =>
+      rodar(supabase.from('exercicios').update(campos).eq('id', id)),
+    onSuccess: (_, { id }) => recarregar(qc, [chaves.catalogo, chaves.arquivados, chaves.exercicio(id)]),
+  })
+}
+
+// Só funciona para exercício nunca usado; o banco recusa os outros (use arquivar).
+export function useExcluirExercicio() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => rodar(supabase.from('exercicios').delete().eq('id', id)),
+    onSuccess: () => recarregar(qc, [chaves.catalogo], false),
+  })
+}
+
+export function useCriarAparelho() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (v: DadosAparelho) => rodar<{ id: string }>(supabase.from('aparelhos').insert(v).select('id').single()),
+    onSuccess: () => qc.invalidateQueries({ queryKey: chaves.aparelhos, refetchType: 'all' }),
+  })
+}
+
+export function useAtualizarAparelho() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...campos }: { id: string } & DadosAparelho) => rodar(supabase.from('aparelhos').update(campos).eq('id', id)),
+    onSuccess: () => recarregar(qc, [chaves.aparelhos, chaves.catalogo]),
+  })
+}
+
+export function useExcluirAparelho() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => rodar(supabase.from('aparelhos').delete().eq('id', id)),
+    onSuccess: () => recarregar(qc, [chaves.aparelhos], false),
   })
 }
 
 export function mensagemDeErro(erro: unknown): string {
   const e = erro as { message?: string; code?: string } | null
   if (e?.code === '23505') return 'Já existe um registro com esse nome.'
+  if (e?.code === '23503') return 'Não dá para excluir: ainda está em uso.'
   if (e?.message?.includes('Failed to fetch')) return 'Sem conexão com o servidor. Tente de novo.'
   return e?.message ?? 'Algo deu errado.'
 }

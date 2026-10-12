@@ -147,9 +147,14 @@ function Conteudo({ sessaoId, ex, registro }: { sessaoId: string; ex: ItemCatalo
     <>
       <Cabecalho voltar="/sessao" titulo={ex.nome} />
       <Pagina>
-        <p className="-mt-1 mb-3 text-sm text-suave">
-          {ex.aparelho ?? ex.grupo}
-          {ex.tipo !== 'cardio' && ex.tipo !== 'peso_corporal' && ` · passo ${numero(ex.incremento_kg)} kg`}
+        <p className="-mt-1 mb-3 flex items-baseline justify-between gap-3 text-sm text-suave">
+          <span className="min-w-0 truncate">
+            {ex.aparelho ?? ex.grupo}
+            {ex.tipo !== 'cardio' && ex.tipo !== 'peso_corporal' && ` · passo ${numero(ex.incremento_kg)} kg`}
+          </span>
+          <Link to={`/exercicios/${ex.id}/editar`} className="shrink-0 text-fraco underline underline-offset-2">
+            editar
+          </Link>
         </p>
 
         {ex.nota && <p className="mb-3 rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm text-alerta">{ex.nota}</p>}

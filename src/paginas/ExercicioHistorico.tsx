@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router'
 import { GraficoEvolucao, type Ponto } from '../componentes/GraficoEvolucao'
 import { Cabecalho, Carregando, Erro, Pagina, Rotulo } from '../componentes/ui'
-import { mensagemDeErro, useCatalogo, useHistoricoExercicio } from '../lib/api'
+import { mensagemDeErro, useExercicio, useHistoricoExercicio } from '../lib/api'
 import {
   dataCurta, diaSemanaCurto, formatarCarga, formatarRitmo, formatarTempo, numero, resumoSeries, rotuloDificuldade,
 } from '../lib/formato'
@@ -97,13 +97,13 @@ function analisar(ex: ItemCatalogo, execs: Execucao[]): Analise {
 
 export default function ExercicioHistorico() {
   const { id = '' } = useParams()
-  const catalogo = useCatalogo()
+  const exercicio = useExercicio(id)
   const historico = useHistoricoExercicio(id)
 
-  if (catalogo.isPending || historico.isPending) return <Carregando />
-  const ex = catalogo.data?.find((e) => e.id === id)
+  if (exercicio.isPending || historico.isPending) return <Carregando />
+  const ex = exercicio.data
   const execs = historico.data ?? [] // da mais recente para a mais antiga
-  const erro = catalogo.error ?? historico.error
+  const erro = exercicio.error ?? historico.error
 
   if (!ex) {
     return (
@@ -123,11 +123,21 @@ export default function ExercicioHistorico() {
 
   return (
     <>
-      <Cabecalho voltar="/exercicios" voltarNoHistorico titulo={ex.nome} />
+      <Cabecalho
+        voltar="/exercicios"
+        voltarNoHistorico
+        titulo={ex.nome}
+        direita={
+          <Link to={`/exercicios/${id}/editar`} className="flex h-10 items-center rounded-xl px-3 font-medium text-acento">
+            Editar
+          </Link>
+        }
+      />
       <Pagina>
         <Erro>{erro && mensagemDeErro(erro)}</Erro>
         <p className="-mt-1 mb-3 text-sm text-suave">
           {ex.aparelho ? `${ex.aparelho} · ${ex.grupo}` : ex.grupo}
+          {ex.arquivado && <span className="ml-2 rounded-md bg-cartao-2 px-1.5 py-0.5 text-xs text-fraco">arquivado</span>}
         </p>
         {ex.nota && <p className="mb-4 rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm text-alerta">{ex.nota}</p>}
 

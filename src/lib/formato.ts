@@ -40,6 +40,12 @@ export function numero(n: number): string {
   return n.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
 }
 
+// Número digitado num campo: "2,5" → 2.5; vazio → null; texto inválido → NaN.
+export function lerNumero(texto: string): number | null {
+  const t = texto.trim().replace(',', '.')
+  return t ? Number(t) : null
+}
+
 export function unidadeCarga(tipo: TipoExercicio): { prefixo: string; sufixo: string } {
   if (tipo === 'carga_por_lado') return { prefixo: '', sufixo: 'kg/lado' }
   if (tipo === 'carga_adicional') return { prefixo: '+', sufixo: 'kg' }

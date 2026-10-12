@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
 import { Carregando } from './componentes/ui'
 import { supabase } from './lib/supabase'
+import Aparelhos from './paginas/Aparelhos'
+import Arquivados from './paginas/Arquivados'
+import EditarAparelho from './paginas/EditarAparelho'
+import EditarExercicio from './paginas/EditarExercicio'
 import Encerrar from './paginas/Encerrar'
 import ExercicioHistorico from './paginas/ExercicioHistorico'
 import Exercicios from './paginas/Exercicios'
@@ -38,7 +42,13 @@ export default function App() {
       <Route path="/sessoes" element={<Sessoes />} />
       <Route path="/sessoes/:id" element={<SessaoDetalhe />} />
       <Route path="/exercicios" element={<Exercicios />} />
+      <Route path="/exercicios/novo" element={<EditarExercicio />} />
+      <Route path="/exercicios/arquivados" element={<Arquivados />} />
       <Route path="/exercicios/:id" element={<ExercicioHistorico />} />
+      <Route path="/exercicios/:id/editar" element={<EditarExercicio />} />
+      <Route path="/aparelhos" element={<Aparelhos />} />
+      <Route path="/aparelhos/novo" element={<EditarAparelho />} />
+      <Route path="/aparelhos/:id" element={<EditarAparelho />} />
       <Route path="/sessao" element={<SessaoLayout />}>
         <Route index element={<Sessao />} />
         <Route path="exercicio/:exercicioId" element={<LogExercicio />} />

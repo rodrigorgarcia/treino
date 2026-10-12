@@ -118,4 +118,25 @@ export interface Aparelho {
   id: string
   nome: string
   incremento_kg: number
+  observacao: string | null
+  exercicios?: { count: number }[] // quantos exercícios usam o aparelho (inclui arquivados)
+}
+
+// Aparelho com os exercícios que o usam, para a tela de edição.
+export interface AparelhoComExercicios extends Omit<Aparelho, 'exercicios'> {
+  exercicios: { id: string; nome: string; arquivado: boolean }[]
+}
+
+// Tabela exercicios, como o formulário de edição lê e grava.
+export interface Exercicio {
+  id: string
+  nome: string
+  grupo_id: string
+  aparelho_id: string | null
+  tipo: TipoExercicio
+  reps_por_lado: boolean
+  incremento_kg: number | null // null = usa o passo do aparelho
+  indice: number | null
+  nota: string | null
+  arquivado: boolean
 }

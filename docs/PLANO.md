@@ -144,6 +144,8 @@ Resumo das séries: se todas são iguais, `3×12 · 30 kg`. Se as reps variam, `
 
 - **Exercício**: nome, grupo, aparelho, tipo de carga, reps por lado, passo, índice e nota fixa. Um exercício **arquivado** some da navegação, mas o histórico dele continua guardado.
 - **Aparelho**: nome, passo e observação (ex.: "vai até 100 kg, de 10 em 10").
+- **Onde editar**: "Editar" no histórico do exercício, "editar" na tela de log (para acertar o passo no meio do treino) e "Aparelhos" na tela de exercícios. Exercício novo pode ser criado na sessão ou na tela de exercícios.
+- **Excluir** só vale para exercício nunca feito e aparelho sem exercícios; o banco recusa o resto. Para um exercício já feito, use arquivar. Trocar o tipo de carga de um exercício já feito não muda os números gravados, só como aparecem (o app avisa).
 
 ## 5. Modelo de dados
 
@@ -370,7 +372,7 @@ docs/
 | **0. Banco** ✅ | Schema, RLS, views, catálogo, testes locais | Feito |
 | **1. Supabase + histórico** ✅ | Criar o projeto, aplicar as migrações, criar o usuário, rodar o seed e importar as 37 sessões | Feito em 11/10: 37 sessões, 307 exercícios, 898 séries |
 | **2. Registro (MVP)** ⏳ | PWA com login, iniciar e continuar sessão, navegação, tela de log, novo exercício, concluir e encerrar | Um treino real inteiro registrado só pelo app. Código pronto e testado de ponta a ponta contra uma cópia local do banco; falta publicar no Netlify e usar na academia |
-| **3. Consulta e edição** ⏳ | Lista e detalhe de sessões, edição, histórico por exercício, catálogo editável | Corrigir um erro de uma sessão passada pelo app. Histórico (busca, filtro por região), detalhe e histórico por exercício (indicadores + gráfico de evolução) prontos; faltam edição e catálogo |
+| **3. Consulta e edição** ⏳ | Lista e detalhe de sessões, edição, histórico por exercício, catálogo editável | Corrigir um erro de uma sessão passada pelo app. Histórico (busca, filtro por região), detalhe, histórico por exercício (indicadores + gráfico de evolução) e catálogo editável prontos; falta editar sessões passadas |
 | **4. Extras** | Backlog abaixo, por ordem de valor | — |
 
 Backlog (fase 4):
