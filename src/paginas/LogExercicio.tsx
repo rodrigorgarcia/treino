@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
-import { Stepper } from '../componentes/Stepper'
+import { Stepper, StepperTempo } from '../componentes/Stepper'
 import { BotaoPrimario, BotaoSecundario, Cabecalho, Carregando, Chip, Erro, Pagina, Rotulo } from '../componentes/ui'
 import {
   chaves, mensagemDeErro, useApagarSerie, useAtualizarSerie, useCatalogo, useConcluirExercicio, useExercicio,
@@ -57,7 +57,7 @@ export function LogExercicioPassado() {
 interface Valores {
   reps: number | null
   carga: number | null
-  duracaoMin: number | null
+  duracaoS: number | null
   distanciaKm: number | null
   andares: number | null
 }
@@ -66,7 +66,7 @@ function deSerie(s: Serie): Valores {
   return {
     reps: s.reps,
     carga: s.carga_kg,
-    duracaoMin: s.duracao_s === null ? null : Math.round(s.duracao_s / 60),
+    duracaoS: s.duracao_s,
     distanciaKm: s.distancia_m === null ? null : s.distancia_m / 1000,
     andares: s.andares,
   }
@@ -80,12 +80,12 @@ function valoresIniciais(ex: ItemCatalogo, series: Serie[]): Valores {
     return {
       reps: null,
       carga: null,
-      duracaoMin: ex.ultima_duracao_s === null ? 30 : Math.round(ex.ultima_duracao_s / 60),
+      duracaoS: ex.ultima_duracao_s ?? 30 * 60,
       distanciaKm: ex.ultima_distancia_m === null ? null : ex.ultima_distancia_m / 1000,
       andares: ex.ultima_andares,
     }
   }
-  return { reps: ex.ultima_reps?.[0] ?? 12, carga: ex.ultima_cargas_kg?.[0] ?? null, duracaoMin: null, distanciaKm: null, andares: null }
+  return { reps: ex.ultima_reps?.[0] ?? 12, carga: ex.ultima_cargas_kg?.[0] ?? null, duracaoS: null, distanciaKm: null, andares: null }
 }
 
 function paraBanco(ex: ItemCatalogo, v: Valores): ValoresSerie {
@@ -93,7 +93,7 @@ function paraBanco(ex: ItemCatalogo, v: Valores): ValoresSerie {
     return {
       reps: null,
       carga_kg: null,
-      duracao_s: v.duracaoMin === null ? null : Math.round(v.duracaoMin * 60),
+      duracao_s: v.duracaoS,
       distancia_m: v.distanciaKm === null ? null : Math.round(v.distanciaKm * 1000),
       andares: v.andares,
     }
@@ -129,7 +129,7 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
   const mudar = (campo: keyof Valores) => (v: number | null) => setValores((atual) => ({ ...atual, [campo]: v }))
   const numeroDaSerie = editando ? editando.numero : series.length + 1
   const ocupado = registrar.isPending || atualizar.isPending || apagar.isPending
-  const vazio = ex.tipo === 'cardio' ? valores.duracaoMin === null && valores.distanciaKm === null : valores.reps === null
+  const vazio = ex.tipo === 'cardio' ? valores.duracaoS === null && valores.distanciaKm === null : valores.reps === null
 
   const ultimaVez =
     ex.ultima_em &&
@@ -249,7 +249,7 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
 
           {ex.tipo === 'cardio' ? (
             <>
-              <Stepper rotulo="Duração" valor={valores.duracaoMin} passo={1} sufixo="min" onChange={mudar('duracaoMin')} />
+              <StepperTempo rotulo="Duração" segundos={valores.duracaoS} onChange={mudar('duracaoS')} />
               <Stepper rotulo="Distância" valor={valores.distanciaKm} passo={0.1} sufixo="km" onChange={mudar('distanciaKm')} />
               <Stepper rotulo="Andares" valor={valores.andares} passo={1} onChange={mudar('andares')} />
             </>

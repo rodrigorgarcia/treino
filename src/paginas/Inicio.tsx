@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router'
+import { SugestaoInstalar } from '../componentes/SugestaoInstalar'
 import { BotaoPrimario, Carregando, Cronometro, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useIniciarSessao, useSessaoAberta, useSessoesRecentes } from '../lib/api'
 import { contarExercicios, dataCurta, formatarDuracao, haQuanto, horaCurta, minutosDoIntervalo } from '../lib/formato'
@@ -56,6 +57,8 @@ export default function Inicio() {
             )}
           </section>
         )}
+
+        <SugestaoInstalar />
 
         <div className="flex items-baseline justify-between">
           <Rotulo>Sessões recentes</Rotulo>

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { SugestaoInstalar } from '../componentes/SugestaoInstalar'
 import { BotaoPrimario, Erro } from '../componentes/ui'
 import { supabase } from '../lib/supabase'
 
@@ -49,6 +50,9 @@ export default function Login() {
           {enviando ? 'Entrando…' : 'Entrar'}
         </BotaoPrimario>
       </form>
+      <div className="mt-8">
+        <SugestaoInstalar />
+      </div>
     </main>
   )
 }
