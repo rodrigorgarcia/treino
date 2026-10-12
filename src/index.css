@@ -1,0 +1,40 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-fundo: #0b0b0f;
+  --color-cartao: #16161c;
+  --color-cartao-2: #202028;
+  --color-borda: #2a2a33;
+  --color-texto: #f4f4f5;
+  --color-suave: #a1a1aa;
+  --color-fraco: #71717a;
+  --color-acento: #b4f35c;
+  --color-acento-escuro: #0b0b0f;
+  --color-alerta: #fbbf24;
+  --color-perigo: #f87171;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Marcas de gráfico (linha e pontos): validado com o dataviz contra --color-cartao no tema escuro.
+   Fora do @theme porque só é usado via var(), não por classe. */
+:root {
+  --color-grafico: #6fa12a;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background: var(--color-fundo);
+  color: var(--color-texto);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}

@@ -1,0 +1,89 @@
+import { Link, useParams } from 'react-router'
+import { Cabecalho, Carregando, Erro, Pagina, Rotulo } from '../componentes/ui'
+import { mensagemDeErro, useSessaoDetalhe } from '../lib/api'
+import { contarExercicios, dataLonga, formatarDuracao, minutosDoIntervalo, resumoDetalhe, rotuloDificuldade } from '../lib/formato'
+import type { DetalheExercicio } from '../lib/tipos'
+
+export default function SessaoDetalhe() {
+  const { id = '' } = useParams()
+  const detalhe = useSessaoDetalhe(id)
+
+  if (detalhe.isPending) return <Carregando />
+  const sessao = detalhe.data?.sessao
+  const exercicios = detalhe.data?.exercicios ?? []
+  const minutos = minutosDoIntervalo(sessao?.duracao ?? null)
+
+  return (
+    <>
+      <Cabecalho
+        voltar="/sessoes"
+        voltarNoHistorico
+        titulo={sessao?.titulo ?? 'Sessão'}
+        direita={
+          sessao?.encerrada_em && (
+            <Link to={`/sessoes/${id}/editar`} state={{ doDetalhe: true }} className="flex h-10 items-center rounded-xl px-3 font-medium text-acento">
+              Editar
+            </Link>
+          )
+        }
+      />
+      <Pagina>
+        <Erro>{detalhe.error && mensagemDeErro(detalhe.error)}</Erro>
+        {!sessao && !detalhe.error && <p className="text-fraco">Sessão não encontrada.</p>}
+        {sessao && (
+          <>
+            <p className="mb-4 text-suave">
+              {dataLonga(sessao.iniciada_em)}
+              {minutos > 0 && ` · ${formatarDuracao(minutos)}`} · {contarExercicios(sessao.n_exercicios)}
+            </p>
+
+            {sessao.objetivo && (
+              <section className="mb-4">
+                <Rotulo>Objetivo</Rotulo>
+                <p className="whitespace-pre-line">{sessao.objetivo}</p>
+              </section>
+            )}
+
+            <ul className="mb-5 divide-y divide-borda overflow-hidden rounded-2xl border border-borda bg-cartao">
+              {exercicios.map((x) => (
+                <ItemExercicio key={x.id} x={x} />
+              ))}
+              {exercicios.length === 0 && <li className="px-4 py-3 text-fraco">Nenhum exercício registrado.</li>}
+            </ul>
+
+            {sessao.observacao && (
+              <section className="mb-4">
+                <Rotulo>Observações</Rotulo>
+                <p className="text-sm whitespace-pre-line text-suave">{sessao.observacao}</p>
+              </section>
+            )}
+          </>
+        )}
+      </Pagina>
+    </>
+  )
+}
+
+function ItemExercicio({ x }: { x: DetalheExercicio }) {
+  const ex = x.exercicios
+  const resumo = resumoDetalhe(x)
+  const dificuldade = rotuloDificuldade(x.dificuldade)
+  return (
+    <li>
+      <Link to={`/exercicios/${ex.id}`} className="block px-4 py-3 active:bg-cartao-2">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="min-w-0">
+            <span className="font-medium">
+              {ex.tipo === 'cardio' && '🏃 '}
+              {ex.nome}
+            </span>
+            <span className="ml-2 text-sm text-suave tabular-nums">{resumo}</span>
+          </span>
+          {dificuldade && <span className="shrink-0 text-sm text-suave">{dificuldade}</span>}
+        </div>
+        <div className="text-xs text-fraco">{ex.aparelhos?.nome ?? ex.grupos.nome}</div>
+        {x.observacao && <div className="mt-1 text-sm text-fraco italic">“{x.observacao}”</div>}
+      </Link>
+    </li>
+  )
+}

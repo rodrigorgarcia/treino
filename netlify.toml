@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # react-router 8 pede Node >= 22.22
+  NODE_VERSION = "22"
+
+# App de página única: qualquer rota abre o index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

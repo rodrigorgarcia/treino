@@ -138,12 +138,15 @@ Resumo das séries: se todas são iguais, `3×12 · 30 kg`. Se as reps variam, `
 ### 4.5 Consulta
 
 - **Sessões**: lista com data, título, duração e número de exercícios. Tocar abre o detalhe no formato da tabela do seu log. Tudo é editável: corrigir carga, apagar série, adicionar um exercício esquecido.
+- **Corrigir uma sessão** ("Editar" no detalhe): cada exercício abre a mesma tela de registro, sem a "última vez", e cada série é salva na hora. Dá para incluir um exercício esquecido, tirar um exercício (apagar todas as séries também tira), mudar título, início, duração, objetivo e observações, ou excluir a sessão. A sessão em andamento não entra aqui; ela se corrige na própria sessão.
 - **Histórico do exercício**: aberto pela tela de log ("ver histórico") ou pelo catálogo, com todas as execuções da mais recente para a mais antiga.
 
 ### 4.6 Catálogo
 
 - **Exercício**: nome, grupo, aparelho, tipo de carga, reps por lado, passo, índice e nota fixa. Um exercício **arquivado** some da navegação, mas o histórico dele continua guardado.
 - **Aparelho**: nome, passo e observação (ex.: "vai até 100 kg, de 10 em 10").
+- **Onde editar**: "Editar" no histórico do exercício, "editar" na tela de log (para acertar o passo no meio do treino) e "Aparelhos" na tela de exercícios. Exercício novo pode ser criado na sessão ou na tela de exercícios.
+- **Excluir** só vale para exercício nunca feito e aparelho sem exercícios; o banco recusa o resto. Para um exercício já feito, use arquivar. Trocar o tipo de carga de um exercício já feito não muda os números gravados, só como aparecem (o app avisa).
 
 ## 5. Modelo de dados
 
@@ -240,9 +243,9 @@ O que cada tela lê e grava:
 - outro usuário não vê nem grava nada que não seja dele;
 - o app (anon ou authenticated) não consegue chamar o seed.
 
-## 6. Catálogo inicial (54 exercícios)
+## 6. Catálogo inicial (55 exercícios)
 
-Consolidado dos 80 nomes do log. Os passos de carga por aparelho foram inferidos das cargas usadas e podem ser ajustados no app.
+Consolidado dos 80 nomes do log, com as equivalências confirmadas por você (seção 11). Os passos de carga por aparelho foram inferidos das cargas usadas e podem ser ajustados no app.
 
 | Grupo | Exercício | Aparelho | Carga | Como aparecia no log |
 |---|---|---|---|---|
@@ -257,20 +260,21 @@ Consolidado dos 80 nomes do log. Os passos de carga por aparelho foram inferidos
 | | Puxada alta (pegada supinada) | Polia alta | kg | Puxada supinada |
 | | Puxada alta (corda) | Cross Cable | kg | Puxada alta (com corda) |
 | | Remada baixa (triângulo) | Remada sentada | kg | Remada baixa cabo, Remada baixa cabo (triângulo), Remada triângulo |
-| | Remada baixa (barra) | Remada sentada | kg | Remada baixa cabo (barra), Remada pegada supinada (#28)? |
+| | Remada baixa (barra) | Remada sentada | kg | Remada baixa cabo (barra) |
+| | Remada baixa (pegada supinada) | Remada sentada | kg | #28, citada nas notas da S36; sem execução no log |
 | | Remada curvada | Barra livre | kg | |
 | Ombros | Elevação lateral (cabo) | Cross Cable | kg | Elevação lateral |
 | | Elevação frontal (cabo) | Cross Cable | kg/lado | Elevação frontal no cabo |
 | | Crucifixo inverso (cabo) | Cross Cable | kg/lado | Crucifixo inverso/posterior no cabo / (cabo) |
-| | Desenvolvimento sentado (halteres) | Halteres | kg/lado | Desenvolvimento? |
+| | Desenvolvimento sentado (halteres) | Halteres | kg/lado | Desenvolvimento |
 | | Voador no cabo bilateral | Cross Cable | kg | Voador no cabo bilateral (fly lateral) |
 | | Face pull (cabo) | Cross Cable | kg | |
-| Bíceps | Rosca com barra (cabo baixo) | Cross Cable | kg | Rosca bíceps com barra (cabo baixo), Rosca com barra (cabo), Rosca bíceps (cabo baixo)? |
+| Bíceps | Rosca com barra (cabo baixo) | Cross Cable | kg | Rosca bíceps com barra (cabo baixo), Rosca com barra (cabo), Rosca bíceps (cabo baixo) |
 | | Rosca na corda (cabo baixo) | Cross Cable | kg | Rosca bíceps na corda (cabo baixo) |
 | | Rosca por trás (cabo baixo) | Cross Cable | kg/lado | Rosca bíceps por trás (cabo baixo) |
 | | Puxada triângulo (bíceps) | Cross Cable | kg | |
-| | Rosca martelo | Halteres | kg/lado | Rosca martelo alternado? |
-| | Rosca martelo cruzada | Halteres | kg, reps/lado | Rosca martelo cruzada (halteres), … alternada, Rosca bíceps cruzada (halteres)? |
+| | Rosca martelo | Halteres | kg/lado | Rosca martelo alternado |
+| | Rosca martelo cruzada | Halteres | kg, reps/lado | Rosca martelo cruzada (halteres), … alternada, Rosca bíceps cruzada (halteres) |
 | | Rosca alternada (halteres) | Halteres | kg/lado | |
 | | Rosca inclinada (halteres) | Halteres | kg/lado | Rosca bíceps inclinada (halteres), Rosca inclinada |
 | | Rosca com barra (livre) | Barra livre | kg | Rosca bíceps com barra (com aparelho "Barra + anilhas") |
@@ -305,7 +309,9 @@ Números do índice já preenchidos (dos que aparecem nas sessões 31–37): inf
 
 ## 7. Importação do histórico
 
-Um script (`scripts/importar-log.ts`) lê o markdown e grava as 37 sessões. Assim, a "última vez" já funciona no primeiro treino com o app.
+O script [`scripts/importar_log.py`](../scripts/importar_log.py) (Python, sem dependências) lê o log guardado em [`docs/referencia/treino_log.md`](referencia/treino_log.md) e gera [`supabase/importacao/historico.sql`](../supabase/importacao/historico.sql), que grava as 37 sessões. Assim, a "última vez" já funciona no primeiro treino com o app.
+
+Para regenerar depois de mudar o log ou as regras: `python3 scripts/importar_log.py`.
 
 Regras de conversão:
 
@@ -321,37 +327,42 @@ Regras de conversão:
   | `3x12` | 12, 12, 12 |
   | `2x10+1x8` | 10, 10, 8 |
   | `6/perna`, `10+8+6/lado` | reps por lado |
-  | `8-10`, `3x5~8`, `decrescente` | tratados um a um |
+  | `8-10` com séries `2x10+1x8` | 10, 10, 8 |
+  | `decrescente` com séries `12+10+8` | 12, 10, 8 |
+  | `3x5~8` (S36) | 5, 5, 5, com "entre 5 e 8 reps" na observação |
 
-- **Carga:** `+40 kg` → 40; `14 kg/lado (28 kg total)` → 14; `15 kg total` → 15. `2+1` com `25 kg + 30 kg (última série)` → duas séries de 25 e uma de 30.
+- **Carga:** `+40 kg` → 40; `14 kg/lado (28 kg total)` → 14; `15 kg total` → 15. `2+1` com `25 kg + 30 kg (última série)` → duas séries de 25 e uma de 30. Supino máquina S1–S4: `20 kg` era o total → 10 kg/lado.
 - **Dificuldade.** O começo do texto vira o nível, e o resto vai para a observação: `Difícil (caiu na última)` → difícil + "caiu na última". `Irregular`, `Pirâmide` e `Interrompido (…)` ficam sem nível, com o texto na observação.
 - **"Não realizado"** não gera registro. Esses nomes entram na observação da sessão ("Não realizados: Stiff").
 - **Cardio.** Duração, distância e andares viram uma série de Corrida ou Climbmill. O protocolo de intervalos vai para a observação.
-- **"Próxima Carga Recomendada"** é descartada, porque o app não terá recomendação. Só os trechos com fato vão para a observação do exercício: correções, "máquina não tinha 20 kg" e estreias.
-- **Formatos diferentes.** A sessão 36 tem as colunas em outra ordem (Grupo, Carga antes de Reps, `3x12`), e a 9 tem uma tabela própria. As duas são tratadas à parte.
-- **Conferência.** Depois de importar, conferir as contagens (37 sessões, 294 exercícios realizados + 12 de cardio) e a "última vez" de uns 10 exercícios contra o log.
+- **"Próxima Carga Recomendada"** é descartada, porque o app não terá recomendação. Só dois trechos com fato vão para a observação do exercício: a correção da Extensora (S11, 35 → 37 kg) e "máquina não tinha 20 kg" (S13). As estreias já estão nas notas da sessão.
+- **Formatos diferentes.** A sessão 36 tem as colunas em outra ordem (Grupo, Carga antes de Reps, `3x12`), e a 9 tem uma tabela própria. As duas são tratadas à parte. A rosca com barra da S37, que só aparece nas notas, entra como exercício feito (3×10, 5 kg, difícil).
+- **Conferência.** O SQL termina mostrando as contagens: **37 sessões, 307 exercícios** (294 da tabela + 12 de cardio + 1 das notas da S37) e **898 séries**.
+- **Segurança.** O SQL cancela tudo se houver mais de um usuário ou se já existirem sessões, então rodar duas vezes não duplica nada. Ele também roda o seed do catálogo.
+- **Testado** em Postgres 16 local nos dois caminhos (com e sem seed rodado antes). A "última vez" de 13 exercícios bateu com o log, ex.: Leg press 04/10 3×10 +60 kg; Supino 02/10 12+10+10 · 20 kg/lado; Agachamento sumô 23/08 12+10+0.
 
 ## 8. Stack e arquitetura
 
 - **Front:** Vite + React + TypeScript. PWA via `vite-plugin-pwa` (manifest, ícone, modo standalone). Tailwind e React Router.
 - **Dados:** `supabase-js` com TanStack Query. A série aparece na tela na hora e é gravada em segundo plano. Se a gravação falhar, aparece um aviso com "tentar de novo".
 - **Tipos:** gerados do banco com `supabase gen types typescript`.
-- **Login:** e-mail + **código de 6 dígitos** (OTP), não link mágico. No iPhone, o PWA instalado não divide o login com o Safari, então o link abriria no lugar errado. O login fica salvo, então você entra uma vez só.
-- **Hospedagem:** Vercel, no plano gratuito, com deploy a cada push na `main`.
+- **Login:** e-mail + **senha**, feito dentro do próprio PWA. O login fica salvo, então você entra uma vez por aparelho. Mudou do plano original (código por e-mail) porque o e-mail padrão do Supabase tem limite baixo de envios e exige configurar o template; com senha, não depende de e-mail nenhum. Link mágico continua descartado: no iPhone, o PWA instalado não divide o login com o Safari.
+- **Hospedagem:** Netlify, no plano gratuito, com deploy a cada push na `main`. A configuração está em `netlify.toml`.
 - **Interface:** feita para o celular. Botões de ≥ 56 px, números grandes, tema escuro e ações principais na metade de baixo da tela, para usar com uma mão.
 - **Fuso:** datas exibidas em `America/Sao_Paulo`.
 
-Estrutura proposta:
+Estrutura:
 
 ```
 src/
-  pages/        Inicio, Sessao, LogExercicio, EncerrarSessao,
-                Sessoes, SessaoDetalhe, ExercicioHistorico, Catalogo
-  components/   Stepper, ChipsDificuldade, ResumoSeries, UltimaVez, …
-  lib/          supabase.ts, queries.ts, formato.ts  ("12+10+8 · 57 kg", "+60 kg", "/perna")
-scripts/        importar-log.ts
+  paginas/      Login, Inicio, SessaoLayout, Sessao, LogExercicio, NovoExercicio, Encerrar
+  componentes/  Stepper (+ / −), ui (cabeçalho, botões, chips, cronômetro)
+  lib/          supabase.ts, api.ts (consultas e gravações), formato.ts ("12+10+8 · 57 kg", "+60 kg", "/perna"), tipos.ts
+public/         ícones do PWA
+scripts/        importar_log.py
 supabase/
   migrations/
+  importacao/
 docs/
 ```
 
@@ -359,10 +370,10 @@ docs/
 
 | Fase | Entrega | Pronto quando |
 |---|---|---|
-| **0. Banco** ✅ | Schema, RLS, views, catálogo, testes locais | Esta entrega |
-| **1. Supabase + histórico** | Criar o projeto, aplicar as migrações, criar o usuário, rodar o seed e importar as 37 sessões | `v_catalogo` mostra a última vez correta nos exercícios conferidos |
-| **2. Registro (MVP)** | PWA com login, iniciar e continuar sessão, navegação, tela de log, novo exercício, concluir e encerrar | Um treino real inteiro registrado só pelo app |
-| **3. Consulta e edição** | Lista e detalhe de sessões, edição, histórico por exercício, catálogo editável | Corrigir um erro de uma sessão passada pelo app |
+| **0. Banco** ✅ | Schema, RLS, views, catálogo, testes locais | Feito |
+| **1. Supabase + histórico** ✅ | Criar o projeto, aplicar as migrações, criar o usuário, rodar o seed e importar as 37 sessões | Feito em 11/10: 37 sessões, 307 exercícios, 898 séries |
+| **2. Registro (MVP)** ⏳ | PWA com login, iniciar e continuar sessão, navegação, tela de log, novo exercício, concluir e encerrar | Um treino real inteiro registrado só pelo app. Código pronto e testado de ponta a ponta contra uma cópia local do banco; falta publicar no Netlify e usar na academia |
+| **3. Consulta e edição** ✅ | Lista e detalhe de sessões, edição, histórico por exercício, catálogo editável | Corrigir um erro de uma sessão passada pelo app. Feito: histórico (busca, filtro por região), detalhe, correção de sessões passadas, histórico por exercício (indicadores + gráfico de evolução) e catálogo editável |
 | **4. Extras** | Backlog abaixo, por ordem de valor | — |
 
 Backlog (fase 4):
@@ -382,25 +393,51 @@ Backlog (fase 4):
 - **Modo offline** (decidido: a internet na academia é boa).
 - **Volume/tonelagem.** Com `kg/lado`, `+kg` e reps por lado, essa conta engana fácil. Fica para quando houver gráficos.
 
-## 11. Pontos a confirmar (antes da importação)
+## 11. Revisão do log
 
-1. **Supino máquina, sessões 1–4:** "20 kg" era o total ou por lado? Da sessão 5 em diante está por lado (14 kg/lado = 28 total). Se era o total, importo como 10 kg/lado.
-2. **É o mesmo exercício?**
-   - "Rosca bíceps (cabo baixo)" (S3–S16) = "Rosca bíceps com barra (cabo baixo)" = "Rosca com barra (cabo)"?
-   - "Rosca martelo alternado" (S21, 9 kg/lado): é a Rosca martelo ou a Rosca martelo cruzada?
-   - "Rosca bíceps cruzada (halteres)" (S26) = "Rosca martelo cruzada"?
-   - "#28 Remada pegada supinada" = "Remada baixa cabo (barra)" (S33)?
-   - "Desenvolvimento" (S7–S12) = "Desenvolvimento sentado (halteres)"?
-   - Na S36, só o voador no cabo **bilateral** foi para Ombros. O **unilateral** continua em Peito?
-3. **Índice completo:** tenho só os números das seções 6 e 9. Na S36, Rosca martelo e Puxada aberta aparecem as duas como #24. Se você me passar a lista completa, preencho os números.
-4. **Abdução na S6** aparece no aparelho "Cadeira adutora", com 15 kg. É a mesma máquina da "Cadeira abdutora" usada depois (35–57 kg)?
-5. **Passos de carga:** os da adutora (2,5 kg) e da máquina de abdominal (2,5 kg) foram chute (o log tem 20 → 22 → 25 → 28 e 27 → 30). Qual é o passo real?
+Decidido com você (11/10):
+
+- **Supino máquina S1–S4:** `20 kg` era o total → importado como 10 kg/lado.
+- **Viram um exercício só:** "Rosca bíceps (cabo baixo)" = Rosca com barra (cabo baixo); "Rosca bíceps cruzada (halteres)" = Rosca martelo cruzada; "Desenvolvimento" = Desenvolvimento sentado (halteres).
+- **"Rosca martelo alternado"** (S21) = Rosca martelo.
+- **"Remada pegada supinada" (#28)** é outro exercício, diferente da Remada baixa (barra). Entrou no catálogo pela migração `20261011150000_remada_supinada.sql`.
+- **O log fica no repositório**, em `docs/referencia/treino_log.md`.
+
+Ainda em aberto (nada disso bloqueia a importação; tudo dá para ajustar depois):
+
+1. **Índice completo:** só estão preenchidos os números que aparecem nas sessões 31–37. Na S36, Rosca martelo e Puxada aberta aparecem as duas como #24, então ficaram sem número.
+2. **Abdução na S6** aparece no aparelho "Cadeira adutora", com 15 kg. É a mesma máquina da "Cadeira abdutora" usada depois (35–57 kg)?
+3. **Passos de carga:** os da adutora (2,5 kg) e da máquina de abdominal (2,5 kg) foram chute (o log tem 20 → 22 → 25 → 28 e 27 → 30).
+4. **Voador no cabo unilateral:** na S36 só o bilateral foi para Ombros. O unilateral ficou em Peito.
 
 ## 12. Como aplicar o banco
 
 1. Crie um projeto no Supabase.
-2. Aplique as migrações. Escolha um caminho:
-   - **SQL Editor:** cole e rode os dois arquivos de `supabase/migrations/`, em ordem.
+2. Aplique as migrações de `supabase/migrations/`, em ordem. Escolha um caminho:
+   - **SQL Editor:** cole e rode cada arquivo.
    - **CLI:** `supabase init` (mantém a pasta `migrations`), `supabase link --project-ref <ref>` e `supabase db push`.
-3. Crie o seu usuário em *Authentication → Users → Add user* (ou faça o primeiro login no app).
-4. No SQL Editor, rode `select public.seed_catalogo('<seu user id>');`.
+3. Crie o seu usuário em *Authentication → Users → Add user*.
+4. No SQL Editor, rode `supabase/importacao/historico.sql`. Ele roda o seed do catálogo e importa as 37 sessões.
+
+Sem importar o histórico, o passo 4 vira `select public.seed_catalogo('<seu user id>');`.
+
+## 13. Como rodar e publicar o app
+
+**No computador:** copie `.env.example` para `.env.local`, preencha a URL e a chave publishable do Supabase (*Project Settings → API*) e rode `npm install` e `npm run dev`.
+
+**No Netlify:**
+
+1. *Add new project → Import an existing project → GitHub* e escolha `rodrigorgarcia/treino`. O comando de build, a pasta `dist` e a versão do Node já vêm do `netlify.toml`.
+2. Antes de publicar, em *Environment variables*, crie `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`. Se publicar antes, rode um novo deploy depois de criar as variáveis, porque elas entram no build.
+3. *Deploy*.
+4. No iPhone, abra a URL no Safari → Compartilhar → *Adicionar à Tela de Início*.
+
+**No Supabase:** desligue novos cadastros em *Authentication → Sign In / Providers → Allow new users to sign up*. A chave publishable fica no app e é pública; com cadastro desligado, ninguém cria conta. O RLS já impede que uma conta veja dados de outra.
+
+**Trocar a senha** (pelo SQL Editor):
+
+```sql
+update auth.users
+set encrypted_password = extensions.crypt('SUA-NOVA-SENHA', extensions.gen_salt('bf'))
+where email = 'seu@email';
+```
