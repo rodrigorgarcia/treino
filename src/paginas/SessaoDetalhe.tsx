@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router'
 import { Cabecalho, Carregando, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useSessaoDetalhe } from '../lib/api'
-import { contarExercicios, dataLonga, formatarDuracao, minutosDoIntervalo, resumoSeries, rotuloDificuldade } from '../lib/formato'
+import { contarExercicios, dataLonga, formatarDuracao, minutosDoIntervalo, resumoDetalhe, rotuloDificuldade } from '../lib/formato'
 import type { DetalheExercicio } from '../lib/tipos'
 
 export default function SessaoDetalhe() {
@@ -15,7 +15,18 @@ export default function SessaoDetalhe() {
 
   return (
     <>
-      <Cabecalho voltar="/sessoes" voltarNoHistorico titulo={sessao?.titulo ?? 'Sessão'} />
+      <Cabecalho
+        voltar="/sessoes"
+        voltarNoHistorico
+        titulo={sessao?.titulo ?? 'Sessão'}
+        direita={
+          sessao?.encerrada_em && (
+            <Link to={`/sessoes/${id}/editar`} state={{ doDetalhe: true }} className="flex h-10 items-center rounded-xl px-3 font-medium text-acento">
+              Editar
+            </Link>
+          )
+        }
+      />
       <Pagina>
         <Erro>{detalhe.error && mensagemDeErro(detalhe.error)}</Erro>
         {!sessao && !detalhe.error && <p className="text-fraco">Sessão não encontrada.</p>}
@@ -55,14 +66,7 @@ export default function SessaoDetalhe() {
 
 function ItemExercicio({ x }: { x: DetalheExercicio }) {
   const ex = x.exercicios
-  const info = { tipo: ex.tipo, reps_por_lado: ex.reps_por_lado, regiao: ex.grupos.regiao }
-  const resumo = resumoSeries(info, {
-    reps: x.series.map((s) => s.reps),
-    cargas: x.series.map((s) => s.carga_kg),
-    duracao_s: x.series.reduce((t, s) => t + (s.duracao_s ?? 0), 0) || null,
-    distancia_m: x.series.reduce((t, s) => t + (s.distancia_m ?? 0), 0) || null,
-    andares: x.series.reduce((t, s) => t + (s.andares ?? 0), 0) || null,
-  })
+  const resumo = resumoDetalhe(x)
   const dificuldade = rotuloDificuldade(x.dificuldade)
   return (
     <li>

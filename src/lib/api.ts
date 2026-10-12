@@ -13,6 +13,16 @@ async function rodar<T>(consulta: PromiseLike<{ data: unknown; error: { message:
   return data as T
 }
 
+// Depois de salvar: marca tudo como desatualizado (recarrega o que está na tela) e já recarrega
+// as `listas` para onde o app volta, para não mostrar o dado antigo.
+// telaAtual = false ao excluir: a tela que some não precisa recarregar.
+function recarregar(qc: QueryClient, listas: QueryKey[], telaAtual = true) {
+  return Promise.all([
+    qc.invalidateQueries({ refetchType: telaAtual ? 'active' : 'none' }),
+    ...listas.map((queryKey) => qc.invalidateQueries({ queryKey, refetchType: 'all' })),
+  ])
+}
+
 export const chaves = {
   sessaoAberta: ['sessao-aberta'] as const,
   sessoesRecentes: ['sessoes-recentes'] as const,
@@ -242,6 +252,20 @@ export function useDescartarSessao() {
 
 // ─── Séries ──────────────────────────────────────────────────
 
+// Depois de mudar um exercício da sessão: recarrega o registro e o "feitos hoje". O resto
+// (detalhe, histórico, última vez) só fica marcado como desatualizado, para o caso de ser
+// uma sessão passada; cada tela recarrega quando abrir.
+function aposMudarRegistro(qc: QueryClient, sessaoId: string, exercicioId: string) {
+  qc.invalidateQueries({ queryKey: chaves.registro(sessaoId, exercicioId) })
+  qc.invalidateQueries({ queryKey: chaves.execucoes(sessaoId) })
+  for (const queryKey of [
+    chaves.sessaoDetalhe(sessaoId), chaves.historico, chaves.sessoesRecentes, chaves.catalogo,
+    chaves.exercicio(exercicioId), chaves.historicoExercicio(exercicioId),
+  ]) {
+    qc.invalidateQueries({ queryKey, refetchType: 'none' })
+  }
+}
+
 export interface ValoresSerie {
   reps: number | null
   carga_kg: number | null
@@ -284,10 +308,7 @@ export function useRegistrarSerie(sessaoId: string, exercicioId: string) {
       return { anterior }
     },
     onError: (_erro, _valores, contexto) => qc.setQueryData(chave, contexto?.anterior),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: chave })
-      qc.invalidateQueries({ queryKey: chaves.execucoes(sessaoId) })
-    },
+    onSettled: () => aposMudarRegistro(qc, sessaoId, exercicioId),
   })
 }
 
@@ -298,10 +319,7 @@ export function useAtualizarSerie(sessaoId: string, exercicioId: string) {
       const { id, ...valores } = v
       return rodar(supabase.from('series').update(valores).eq('id', id))
     },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: chaves.registro(sessaoId, exercicioId) })
-      qc.invalidateQueries({ queryKey: chaves.execucoes(sessaoId) })
-    },
+    onSettled: () => aposMudarRegistro(qc, sessaoId, exercicioId),
   })
 }
 
@@ -309,10 +327,7 @@ export function useApagarSerie(sessaoId: string, exercicioId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => rodar(supabase.from('series').delete().eq('id', id)),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: chaves.registro(sessaoId, exercicioId) })
-      qc.invalidateQueries({ queryKey: chaves.execucoes(sessaoId) })
-    },
+    onSettled: () => aposMudarRegistro(qc, sessaoId, exercicioId),
   })
 }
 
@@ -326,10 +341,35 @@ export function useConcluirExercicio(sessaoId: string, exercicioId: string) {
           .update({ dificuldade: v.dificuldade, observacao: v.observacao })
           .eq('id', v.registroId),
       ),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: chaves.registro(sessaoId, exercicioId) })
-      qc.invalidateQueries({ queryKey: chaves.execucoes(sessaoId) })
-    },
+    onSettled: () => aposMudarRegistro(qc, sessaoId, exercicioId),
+  })
+}
+
+// Tira o exercício da sessão, com as séries.
+export function useRemoverDaSessao(sessaoId: string, exercicioId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (registroId: string) => rodar(supabase.from('sessao_exercicios').delete().eq('id', registroId)),
+    onSettled: () => aposMudarRegistro(qc, sessaoId, exercicioId),
+  })
+}
+
+// ─── Sessões passadas ────────────────────────────────────────
+
+export function useAtualizarSessao() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...campos }: Pick<Sessao, 'id' | 'titulo' | 'objetivo' | 'observacao' | 'iniciada_em' | 'encerrada_em'>) =>
+      rodar(supabase.from('sessoes').update(campos).eq('id', id)),
+    onSuccess: (_, { id }) => recarregar(qc, [chaves.sessaoDetalhe(id), chaves.historico, chaves.sessoesRecentes]),
+  })
+}
+
+export function useExcluirSessao() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => rodar(supabase.from('sessoes').delete().eq('id', id)),
+    onSuccess: () => recarregar(qc, [chaves.historico, chaves.sessoesRecentes], false),
   })
 }
 
@@ -345,16 +385,6 @@ export function useCriarExercicio() {
     // Espera o catálogo recarregar para a tela de log já encontrar o exercício novo.
     onSuccess: () => qc.invalidateQueries({ queryKey: chaves.catalogo, refetchType: 'all' }),
   })
-}
-
-// Nome, grupo, aparelho e passo aparecem em várias telas: marca tudo como desatualizado e já
-// recarrega as `listas` para onde o app volta depois de salvar, para não mostrar o dado antigo.
-// telaAtual = false ao excluir: a tela que some não precisa recarregar.
-function recarregar(qc: QueryClient, listas: QueryKey[], telaAtual = true) {
-  return Promise.all([
-    qc.invalidateQueries({ refetchType: telaAtual ? 'active' : 'none' }),
-    ...listas.map((queryKey) => qc.invalidateQueries({ queryKey, refetchType: 'all' })),
-  ])
 }
 
 export function useAtualizarExercicio() {

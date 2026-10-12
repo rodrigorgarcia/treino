@@ -138,6 +138,7 @@ Resumo das séries: se todas são iguais, `3×12 · 30 kg`. Se as reps variam, `
 ### 4.5 Consulta
 
 - **Sessões**: lista com data, título, duração e número de exercícios. Tocar abre o detalhe no formato da tabela do seu log. Tudo é editável: corrigir carga, apagar série, adicionar um exercício esquecido.
+- **Corrigir uma sessão** ("Editar" no detalhe): cada exercício abre a mesma tela de registro, sem a "última vez", e cada série é salva na hora. Dá para incluir um exercício esquecido, tirar um exercício (apagar todas as séries também tira), mudar título, início, duração, objetivo e observações, ou excluir a sessão. A sessão em andamento não entra aqui; ela se corrige na própria sessão.
 - **Histórico do exercício**: aberto pela tela de log ("ver histórico") ou pelo catálogo, com todas as execuções da mais recente para a mais antiga.
 
 ### 4.6 Catálogo
@@ -372,7 +373,7 @@ docs/
 | **0. Banco** ✅ | Schema, RLS, views, catálogo, testes locais | Feito |
 | **1. Supabase + histórico** ✅ | Criar o projeto, aplicar as migrações, criar o usuário, rodar o seed e importar as 37 sessões | Feito em 11/10: 37 sessões, 307 exercícios, 898 séries |
 | **2. Registro (MVP)** ⏳ | PWA com login, iniciar e continuar sessão, navegação, tela de log, novo exercício, concluir e encerrar | Um treino real inteiro registrado só pelo app. Código pronto e testado de ponta a ponta contra uma cópia local do banco; falta publicar no Netlify e usar na academia |
-| **3. Consulta e edição** ⏳ | Lista e detalhe de sessões, edição, histórico por exercício, catálogo editável | Corrigir um erro de uma sessão passada pelo app. Histórico (busca, filtro por região), detalhe, histórico por exercício (indicadores + gráfico de evolução) e catálogo editável prontos; falta editar sessões passadas |
+| **3. Consulta e edição** ✅ | Lista e detalhe de sessões, edição, histórico por exercício, catálogo editável | Corrigir um erro de uma sessão passada pelo app. Feito: histórico (busca, filtro por região), detalhe, correção de sessões passadas, histórico por exercício (indicadores + gráfico de evolução) e catálogo editável |
 | **4. Extras** | Backlog abaixo, por ordem de valor | — |
 
 Backlog (fase 4):

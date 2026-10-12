@@ -28,13 +28,14 @@ interface Props {
   catalogo: ItemCatalogo[] | undefined
   carregando: boolean
   link: (ex: ItemCatalogo) => string // para onde cada exercício leva
+  substituir?: boolean // o link substitui a tela atual no histórico (escolher e seguir)
   feitos?: Map<string, Execucao> // feitos na sessão de hoje (marca ✓ e mostra o resumo de hoje)
   rodape?: (regiao: Regiao) => ReactNode
 }
 
 // Catálogo navegável: busca, regiões, subgrupos e agrupamento por grupo ou aparelho,
 // com a última execução em cada linha. Usado na sessão e na tela de exercícios.
-export function ListaExercicios({ catalogo, carregando, link, feitos, rodape }: Props) {
+export function ListaExercicios({ catalogo, carregando, link, substituir = false, feitos, rodape }: Props) {
   const [aba, setAba] = useState<Regiao>(() => lerPreferencia('treino.aba', 'superiores'))
   const [modo, setModo] = useState<Modo>(() => lerPreferencia('treino.modo', 'grupo'))
   const [subgrupo, setSubgrupo] = useState<string | null>(() => lerPreferencia('treino.subgrupo', '') || null)
@@ -140,7 +141,7 @@ export function ListaExercicios({ catalogo, carregando, link, feitos, rodape }: 
             <Rotulo>{s.titulo}</Rotulo>
             <ul className="divide-y divide-borda overflow-hidden rounded-2xl border border-borda bg-cartao">
               {s.itens.map((e) => (
-                <ItemExercicio key={e.id} ex={e} para={link(e)} hoje={feitos?.get(e.id)} />
+                <ItemExercicio key={e.id} ex={e} para={link(e)} substituir={substituir} hoje={feitos?.get(e.id)} />
               ))}
               {s.itens.length === 0 && <li className="px-4 py-3 text-fraco">Nenhum exercício.</li>}
             </ul>
@@ -153,7 +154,7 @@ export function ListaExercicios({ catalogo, carregando, link, feitos, rodape }: 
   )
 }
 
-function ItemExercicio({ ex, para, hoje }: { ex: ItemCatalogo; para: string; hoje?: Execucao }) {
+function ItemExercicio({ ex, para, substituir, hoje }: { ex: ItemCatalogo; para: string; substituir: boolean; hoje?: Execucao }) {
   let detalhe: string
   if (hoje) {
     detalhe = 'hoje: ' + resumoSeries(ex, { reps: hoje.reps, cargas: hoje.cargas_kg, duracao_s: hoje.duracao_s, distancia_m: hoje.distancia_m, andares: hoje.andares })
@@ -170,7 +171,7 @@ function ItemExercicio({ ex, para, hoje }: { ex: ItemCatalogo; para: string; hoj
   }
   return (
     <li>
-      <Link to={para} className="flex items-center gap-3 px-4 py-3 active:bg-cartao-2">
+      <Link to={para} replace={substituir} className="flex items-center gap-3 px-4 py-3 active:bg-cartao-2">
         <div className="min-w-0 flex-1">
           <div className="truncate font-medium">
             {ex.indice !== null && <span className="mr-1.5 text-sm text-fraco tabular-nums">#{ex.indice}</span>}

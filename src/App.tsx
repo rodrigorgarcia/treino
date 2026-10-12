@@ -8,12 +8,13 @@ import Aparelhos from './paginas/Aparelhos'
 import Arquivados from './paginas/Arquivados'
 import EditarAparelho from './paginas/EditarAparelho'
 import EditarExercicio from './paginas/EditarExercicio'
+import EditarSessao, { AdicionarNaSessao } from './paginas/EditarSessao'
 import Encerrar from './paginas/Encerrar'
 import ExercicioHistorico from './paginas/ExercicioHistorico'
 import Exercicios from './paginas/Exercicios'
 import Inicio from './paginas/Inicio'
 import Login from './paginas/Login'
-import LogExercicio from './paginas/LogExercicio'
+import LogExercicio, { LogExercicioPassado } from './paginas/LogExercicio'
 import NovoExercicio from './paginas/NovoExercicio'
 import Sessao from './paginas/Sessao'
 import SessaoDetalhe from './paginas/SessaoDetalhe'
@@ -41,6 +42,9 @@ export default function App() {
       <Route path="/" element={<Inicio />} />
       <Route path="/sessoes" element={<Sessoes />} />
       <Route path="/sessoes/:id" element={<SessaoDetalhe />} />
+      <Route path="/sessoes/:id/editar" element={<EditarSessao />} />
+      <Route path="/sessoes/:id/adicionar" element={<AdicionarNaSessao />} />
+      <Route path="/sessoes/:id/exercicio/:exercicioId" element={<LogExercicioPassado />} />
       <Route path="/exercicios" element={<Exercicios />} />
       <Route path="/exercicios/novo" element={<EditarExercicio />} />
       <Route path="/exercicios/arquivados" element={<Arquivados />} />

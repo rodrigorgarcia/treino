@@ -1,6 +1,6 @@
 // Texto exibido no app, no mesmo jeito de escrever do log: "12+10+8 · 57 kg", "+60 kg", "10/perna".
 
-import type { Dificuldade, Regiao, TipoExercicio } from './tipos'
+import type { DetalheExercicio, Dificuldade, Regiao, TipoExercicio } from './tipos'
 
 const FUSO = 'America/Sao_Paulo'
 
@@ -121,6 +121,21 @@ export function resumoSeries(ex: InfoExercicio, s: Series): string {
   return blocos.map((b) => `${resumoReps(b.reps)}${lado} · ${formatarCarga(b.carga, ex.tipo)}`).join(' → ')
 }
 
+// Exercício no detalhe da sessão (séries vindas da tabela), no mesmo formato.
+export function resumoDetalhe(x: DetalheExercicio): string {
+  const ex = x.exercicios
+  return resumoSeries(
+    { tipo: ex.tipo, reps_por_lado: ex.reps_por_lado, regiao: ex.grupos.regiao },
+    {
+      reps: x.series.map((s) => s.reps),
+      cargas: x.series.map((s) => s.carga_kg),
+      duracao_s: x.series.reduce((t, s) => t + (s.duracao_s ?? 0), 0) || null,
+      distancia_m: x.series.reduce((t, s) => t + (s.distancia_m ?? 0), 0) || null,
+      andares: x.series.reduce((t, s) => t + (s.andares ?? 0), 0) || null,
+    },
+  )
+}
+
 // Uma série: "10 × 57 kg", "8/perna × 7 kg/lado", "31 min · 3,6 km".
 export function formatarSerie(
   ex: InfoExercicio,
@@ -162,6 +177,19 @@ export function mesAno(iso: string): string {
 // Para busca: minúsculas e sem acento ("Agachamento sumô" → "agachamento sumo").
 export function normalizar(texto: string): string {
   return texto.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('pt-BR')
+}
+
+// Campo datetime-local ("2026-10-04T07:30") no fuso do app, e de volta para ISO.
+export function paraCampoDataHora(iso: string): string {
+  return new Date(iso)
+    .toLocaleString('sv-SE', { timeZone: FUSO, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+    .replace(' ', 'T')
+}
+
+export function deCampoDataHora(valor: string): string {
+  const comoUtc = Date.parse(valor + ':00Z') // os números do campo lidos como se fossem UTC
+  const deslocamento = Date.parse(paraCampoDataHora(new Date(comoUtc).toISOString()) + ':00Z') - comoUtc // fuso − UTC
+  return new Date(comoUtc - deslocamento).toISOString()
 }
 
 export function horaCurta(iso: string): string {

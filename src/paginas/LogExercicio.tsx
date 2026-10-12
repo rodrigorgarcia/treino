@@ -1,15 +1,18 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { Stepper } from '../componentes/Stepper'
 import { BotaoPrimario, BotaoSecundario, Cabecalho, Carregando, Chip, Erro, Pagina, Rotulo } from '../componentes/ui'
 import {
-  mensagemDeErro, useApagarSerie, useAtualizarSerie, useCatalogo, useConcluirExercicio, useRegistrarSerie, useRegistro,
-  type ValoresSerie,
+  chaves, mensagemDeErro, useApagarSerie, useAtualizarSerie, useCatalogo, useConcluirExercicio, useExercicio,
+  useRegistrarSerie, useRegistro, useRemoverDaSessao, useSessaoDetalhe, type ValoresSerie,
 } from '../lib/api'
 import {
-  DIFICULDADES, dataCurta, formatarSerie, haQuanto, numero, resumoSeries, rotuloDificuldade, sufixoLado, unidadeCarga,
+  DIFICULDADES, dataCurta, diaSemanaCurto, formatarSerie, haQuanto, numero, resumoSeries, rotuloDificuldade, sufixoLado,
+  unidadeCarga,
 } from '../lib/formato'
 import type { Dificuldade, ItemCatalogo, Registro, Serie } from '../lib/tipos'
+import { useVoltar } from '../lib/useVoltar'
 import { useSessao } from './useSessao'
 
 export default function LogExercicio() {
@@ -22,6 +25,33 @@ export default function LogExercicio() {
   const ex = catalogo.data?.find((e) => e.id === exercicioId)
   if (!ex) return catalogo.isFetching ? <Carregando /> : <Navigate to="/sessao" replace />
   return <Conteudo key={exercicioId} sessaoId={sessao.id} ex={ex} registro={registro.data ?? null} />
+}
+
+// Corrigir um exercício de uma sessão já encerrada (/sessoes/:id/exercicio/:exercicioId).
+// Mesma tela, mas sem "última vez" e voltando para a edição da sessão.
+export function LogExercicioPassado() {
+  const { id = '', exercicioId = '' } = useParams()
+  const detalhe = useSessaoDetalhe(id)
+  const exercicio = useExercicio(exercicioId)
+  const registro = useRegistro(id, exercicioId)
+
+  if (detalhe.isPending || exercicio.isPending || registro.isPending) return <Carregando />
+  const sessao = detalhe.data?.sessao
+  const ex = exercicio.data
+  const erro = detalhe.error ?? exercicio.error ?? registro.error
+  if (sessao && !sessao.encerrada_em) return <Navigate to={`/sessao/exercicio/${exercicioId}`} replace />
+  if (!sessao || !ex || erro) {
+    return (
+      <>
+        <Cabecalho voltar={`/sessoes/${id}`} voltarNoHistorico titulo="Corrigir exercício" />
+        <Pagina>
+          <Erro>{erro && mensagemDeErro(erro)}</Erro>
+          {!erro && <p className="text-fraco">Sessão ou exercício não encontrado.</p>}
+        </Pagina>
+      </>
+    )
+  }
+  return <Conteudo key={exercicioId} sessaoId={id} ex={ex} registro={registro.data ?? null} passada={diaSemanaCurto(sessao.iniciada_em)} />
 }
 
 interface Valores {
@@ -77,8 +107,12 @@ function paraBanco(ex: ItemCatalogo, v: Valores): ValoresSerie {
   }
 }
 
-function Conteudo({ sessaoId, ex, registro }: { sessaoId: string; ex: ItemCatalogo; registro: Registro | null }) {
+// passada: data da sessão encerrada que está sendo corrigida ("sáb. 04/10").
+function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: ItemCatalogo; registro: Registro | null; passada?: string }) {
   const navigate = useNavigate()
+  const voltarPara = useVoltar()
+  const qc = useQueryClient()
+  const destino = passada ? `/sessoes/${sessaoId}/editar` : '/sessao'
   const series = registro?.series ?? []
   const [valores, setValores] = useState<Valores>(() => valoresIniciais(ex, series))
   const [editando, setEditando] = useState<Serie | null>(null)
@@ -89,7 +123,8 @@ function Conteudo({ sessaoId, ex, registro }: { sessaoId: string; ex: ItemCatalo
   const atualizar = useAtualizarSerie(sessaoId, ex.id)
   const apagar = useApagarSerie(sessaoId, ex.id)
   const concluir = useConcluirExercicio(sessaoId, ex.id)
-  const erro = registrar.error ?? atualizar.error ?? apagar.error ?? concluir.error
+  const remover = useRemoverDaSessao(sessaoId, ex.id)
+  const erro = registrar.error ?? atualizar.error ?? apagar.error ?? concluir.error ?? remover.error
 
   const mudar = (campo: keyof Valores) => (v: number | null) => setValores((atual) => ({ ...atual, [campo]: v }))
   const numeroDaSerie = editando ? editando.numero : series.length + 1
@@ -106,7 +141,7 @@ function Conteudo({ sessaoId, ex, registro }: { sessaoId: string; ex: ItemCatalo
       andares: ex.ultima_andares,
     })
   const dicaSerie =
-    ex.tipo !== 'cardio' && ex.ultima_reps && numeroDaSerie <= ex.ultima_reps.length
+    !passada && ex.tipo !== 'cardio' && ex.ultima_reps && numeroDaSerie <= ex.ultima_reps.length
       ? 'última vez: ' +
         formatarSerie(ex, {
           reps: ex.ultima_reps[numeroDaSerie - 1],
@@ -130,14 +165,31 @@ function Conteudo({ sessaoId, ex, registro }: { sessaoId: string; ex: ItemCatalo
     atualizar.mutate({ id: editando.id, ...dados }, { onSuccess: () => sairDaEdicao(series.map((s) => (s.id === editada.id ? editada : s))) })
   }
 
+  // Na sessão em andamento volta para a lista. Numa sessão passada, espera o detalhe recarregar
+  // para a edição da sessão já mostrar a correção.
+  async function sair() {
+    if (!passada) return navigate('/sessao')
+    await qc.refetchQueries({ queryKey: chaves.sessaoDetalhe(sessaoId) })
+    voltarPara(destino)
+  }
+
   function concluirExercicio() {
     const obs = observacao.trim() || null
     const mudou = dificuldade !== (registro?.dificuldade ?? null) || obs !== (registro?.observacao ?? null)
-    if (registro?.id && mudou) {
-      concluir.mutate({ registroId: registro.id, dificuldade, observacao: obs }, { onSuccess: () => navigate('/sessao') })
+    if (passada && registro?.id && series.length === 0) {
+      remover.mutate(registro.id, { onSuccess: sair }) // apagou todas as séries: sai da sessão
+    } else if (registro?.id && mudou) {
+      concluir.mutate({ registroId: registro.id, dificuldade, observacao: obs }, { onSuccess: sair })
     } else {
-      navigate('/sessao')
+      sair()
     }
+  }
+
+  function removerDaSessao() {
+    if (!registro?.id) return
+    const apagadas = series.length === 1 ? 'A série registrada será apagada.' : `As ${series.length} séries registradas serão apagadas.`
+    if (!window.confirm(`Tirar “${ex.nome}” desta sessão? ${apagadas}`)) return
+    remover.mutate(registro.id, { onSuccess: sair })
   }
 
   const carga = unidadeCarga(ex.tipo)
@@ -145,7 +197,7 @@ function Conteudo({ sessaoId, ex, registro }: { sessaoId: string; ex: ItemCatalo
 
   return (
     <>
-      <Cabecalho voltar="/sessao" titulo={ex.nome} />
+      <Cabecalho voltar={destino} voltarNoHistorico={!!passada} titulo={ex.nome} />
       <Pagina>
         <p className="-mt-1 mb-3 flex items-baseline justify-between gap-3 text-sm text-suave">
           <span className="min-w-0 truncate">
@@ -159,27 +211,33 @@ function Conteudo({ sessaoId, ex, registro }: { sessaoId: string; ex: ItemCatalo
 
         {ex.nota && <p className="mb-3 rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm text-alerta">{ex.nota}</p>}
 
-        <div className="mb-4 text-sm text-fraco" data-testid="ultima-vez">
-          {ultimaVez ? (
-            <>
-              <div className="flex items-baseline justify-between gap-3">
-                <span>
-                  Última vez · {dataCurta(ex.ultima_em!)}, {haQuanto(ex.ultima_em!)}
-                </span>
-                <Link to={`/exercicios/${ex.id}`} className="shrink-0 text-acento">
-                  ver histórico
-                </Link>
-              </div>
-              <div className="text-suave">
-                {ultimaVez}
-                {ex.ultima_dificuldade && ` · ${rotuloDificuldade(ex.ultima_dificuldade)}`}
-              </div>
-              {ex.ultima_observacao && <div className="italic">“{ex.ultima_observacao}”</div>}
-            </>
-          ) : (
-            'Primeira vez neste exercício.'
-          )}
-        </div>
+        {passada ? (
+          <p className="mb-4 rounded-xl border border-borda bg-cartao-2 px-3 py-2 text-sm text-suave" data-testid="corrigindo">
+            Corrigindo a sessão de {passada}. As séries são salvas na hora.
+          </p>
+        ) : (
+          <div className="mb-4 text-sm text-fraco" data-testid="ultima-vez">
+            {ultimaVez ? (
+              <>
+                <div className="flex items-baseline justify-between gap-3">
+                  <span>
+                    Última vez · {dataCurta(ex.ultima_em!)}, {haQuanto(ex.ultima_em!)}
+                  </span>
+                  <Link to={`/exercicios/${ex.id}`} className="shrink-0 text-acento">
+                    ver histórico
+                  </Link>
+                </div>
+                <div className="text-suave">
+                  {ultimaVez}
+                  {ex.ultima_dificuldade && ` · ${rotuloDificuldade(ex.ultima_dificuldade)}`}
+                </div>
+                {ex.ultima_observacao && <div className="italic">“{ex.ultima_observacao}”</div>}
+              </>
+            ) : (
+              'Primeira vez neste exercício.'
+            )}
+          </div>
+        )}
 
         <Erro>{erro && mensagemDeErro(erro)}</Erro>
 
@@ -236,7 +294,7 @@ function Conteudo({ sessaoId, ex, registro }: { sessaoId: string; ex: ItemCatalo
 
         {series.length > 0 && (
           <section className="mb-6">
-            <Rotulo>Hoje</Rotulo>
+            <Rotulo>{passada ? 'Séries' : 'Hoje'}</Rotulo>
             <ul className="divide-y divide-borda overflow-hidden rounded-2xl border border-borda bg-cartao">
               {series.map((s) => (
                 <li key={s.id}>
@@ -278,10 +336,19 @@ function Conteudo({ sessaoId, ex, registro }: { sessaoId: string; ex: ItemCatalo
           <BotaoSecundario
             className="w-full"
             onClick={concluirExercicio}
-            disabled={concluir.isPending || registrar.isPending || (series.length > 0 && !registro?.id)}
+            disabled={concluir.isPending || registrar.isPending || remover.isPending || (series.length > 0 && !registro?.id)}
           >
-            {series.length > 0 ? 'Concluir exercício' : 'Voltar sem registrar'}
+            {series.length > 0 ? (passada ? 'Pronto' : 'Concluir exercício') : 'Voltar sem registrar'}
           </BotaoSecundario>
+          {passada && registro?.id && series.length > 0 && (
+            <button
+              onClick={removerDaSessao}
+              disabled={ocupado || remover.isPending}
+              className="mt-4 h-12 w-full rounded-xl text-perigo active:bg-perigo/10 disabled:opacity-50"
+            >
+              Tirar da sessão
+            </button>
+          )}
         </section>
       </Pagina>
     </>
