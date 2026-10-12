@@ -19,5 +19,5 @@ npm run dev
 ## Status
 
 - Fase 0 (banco) e fase 1 (Supabase + histórico importado) prontas.
-- Fase 2 (registro) pronta e no ar no preview do Netlify, já usando o Supabase real.
+- Fase 2 (registro) pronta e em produção em https://treinorrg.netlify.app.
 - Fase 3 (consulta e edição) pronta: histórico com busca, detalhe e correção de sessões passadas, histórico por exercício com gráfico de evolução e edição do catálogo (exercícios e aparelhos).
