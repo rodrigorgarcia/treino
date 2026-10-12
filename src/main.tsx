@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import App from './App'
 import './index.css'
+import './lib/instalacao' // guarda o aviso de instalação do navegador desde o carregamento
 
 const queryClient = new QueryClient({
   defaultOptions: {

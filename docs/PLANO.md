@@ -372,7 +372,7 @@ docs/
 |---|---|---|
 | **0. Banco** ✅ | Schema, RLS, views, catálogo, testes locais | Feito |
 | **1. Supabase + histórico** ✅ | Criar o projeto, aplicar as migrações, criar o usuário, rodar o seed e importar as 37 sessões | Feito em 11/10: 37 sessões, 307 exercícios, 898 séries |
-| **2. Registro (MVP)** ⏳ | PWA com login, iniciar e continuar sessão, navegação, tela de log, novo exercício, concluir e encerrar | Um treino real inteiro registrado só pelo app. Código pronto e testado de ponta a ponta contra uma cópia local do banco; falta publicar no Netlify e usar na academia |
+| **2. Registro (MVP)** ✅ | PWA com login, iniciar e continuar sessão, navegação, tela de log, novo exercício, concluir e encerrar | Um treino real inteiro registrado só pelo app. Em produção desde 12/10 em https://treinorrg.netlify.app |
 | **3. Consulta e edição** ✅ | Lista e detalhe de sessões, edição, histórico por exercício, catálogo editável | Corrigir um erro de uma sessão passada pelo app. Feito: histórico (busca, filtro por região), detalhe, correção de sessões passadas, histórico por exercício (indicadores + gráfico de evolução) e catálogo editável |
 | **4. Extras** | Backlog abaixo, por ordem de valor | — |
 
@@ -431,6 +431,8 @@ Sem importar o histórico, o passo 4 vira `select public.seed_catalogo('<seu use
 2. Antes de publicar, em *Environment variables*, crie `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`. Se publicar antes, rode um novo deploy depois de criar as variáveis, porque elas entram no build.
 3. *Deploy*.
 4. No iPhone, abra a URL no Safari → Compartilhar → *Adicionar à Tela de Início*.
+
+**Publicar mudanças:** no Netlify, a branch de produção é a `main`, e *Branch deploys* fica em *None*. Cada ajuste vai num PR contra a `main`. Cada push no PR gera um Deploy Preview, sem gastar créditos, com URL própria (`deploy-preview-N--treinorrg.netlify.app`) e usando o Supabase real. O merge na `main` publica em produção, com um deploy que custa 15 créditos. Por isso, junte vários ajustes num PR e faça um merge só. Se o deploy falhar na etapa de publicação com "HTTP Error 500" e "internal system error", o erro é da Netlify: use *Retry deploy*.
 
 **No Supabase:** desligue novos cadastros em *Authentication → Sign In / Providers → Allow new users to sign up*. A chave publishable fica no app e é pública; com cadastro desligado, ninguém cria conta. O RLS já impede que uma conta veja dados de outra.
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { numero } from '../lib/formato'
 
 interface Props {
@@ -70,6 +70,96 @@ export function Stepper({ rotulo, valor, passo, onChange, prefixo = '', sufixo =
           type="button"
           aria-label={`Aumentar ${rotulo.toLowerCase()}`}
           onClick={() => onChange(arredondar((valor ?? 0) + passo))}
+          className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-cartao-2 text-4xl font-light active:bg-borda"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  )
+}
+
+const relogio = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+
+// Duração em segundos, exibida como 31:49. − / + mudam 1 minuto; tocar no tempo abre
+// minutos e segundos separados, com teclado numérico (o do celular não tem ":").
+export function StepperTempo({ rotulo, segundos, onChange }: { rotulo: string; segundos: number | null; onChange: (s: number | null) => void }) {
+  const [editando, setEditando] = useState(false)
+  const [min, setMin] = useState('')
+  const [seg, setSeg] = useState('')
+  const campoSeg = useRef<HTMLInputElement>(null)
+
+  function abrir() {
+    setMin(segundos === null ? '' : String(Math.floor(segundos / 60)))
+    setSeg(segundos === null ? '' : String(segundos % 60).padStart(2, '0'))
+    setEditando(true)
+  }
+
+  function confirmar() {
+    setEditando(false)
+    if (min.trim() === '' && seg.trim() === '') return onChange(null)
+    const m = Number(min.trim() || 0)
+    const s = Number(seg.trim() || 0)
+    if (Number.isInteger(m) && Number.isInteger(s) && m >= 0 && s >= 0) onChange(m * 60 + s)
+  }
+
+  const campo = 'h-16 min-w-0 rounded-2xl border border-acento bg-cartao text-center text-4xl font-semibold tabular-nums outline-none'
+
+  return (
+    <div>
+      <div className="mb-1 text-xs font-medium tracking-wider text-fraco uppercase">{rotulo}</div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          aria-label={`Diminuir ${rotulo.toLowerCase()}`}
+          onClick={() => segundos !== null && onChange(Math.max(0, segundos - 60))}
+          className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-cartao-2 text-4xl font-light active:bg-borda"
+        >
+          −
+        </button>
+        {editando ? (
+          <div
+            className="flex min-w-0 flex-1 items-center justify-center gap-1"
+            onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && confirmar()}
+          >
+            <input
+              autoFocus
+              inputMode="numeric"
+              aria-label={`${rotulo}: minutos`}
+              value={min}
+              onChange={(e) => setMin(e.target.value.replace(/\D/g, ''))}
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => e.key === 'Enter' && campoSeg.current?.focus()}
+              className={`${campo} w-0 flex-[3]`}
+            />
+            <span className="text-4xl font-semibold">:</span>
+            <input
+              ref={campoSeg}
+              inputMode="numeric"
+              maxLength={2}
+              aria-label={`${rotulo}: segundos`}
+              value={seg}
+              onChange={(e) => setSeg(e.target.value.replace(/\D/g, ''))}
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => e.key === 'Enter' && confirmar()}
+              className={`${campo} w-0 flex-[2]`}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            aria-label={`${rotulo}: ${segundos === null ? 'vazio' : relogio(segundos)}. Toque para digitar`}
+            onClick={abrir}
+            className="flex h-16 min-w-0 flex-1 items-baseline justify-center gap-1 rounded-2xl tabular-nums"
+          >
+            <span className="text-5xl font-semibold">{segundos === null ? '—' : relogio(segundos)}</span>
+            {segundos !== null && <span className="text-lg text-suave">min</span>}
+          </button>
+        )}
+        <button
+          type="button"
+          aria-label={`Aumentar ${rotulo.toLowerCase()}`}
+          onClick={() => onChange((segundos ?? 0) + 60)}
           className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-cartao-2 text-4xl font-light active:bg-borda"
         >
           +
