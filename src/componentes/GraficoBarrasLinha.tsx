@@ -3,10 +3,10 @@ import { passoBonito, type Ponto, type Serie } from '../lib/grafico'
 
 interface Props {
   pontos: Ponto[] // em ordem cronológica, uma coluna por sessão
-  barras: Serie // eixo da esquerda (ex.: carga)
-  linha: Serie // eixo da direita (ex.: repetições)
-  rotuloBarras: string // unidade no topo do eixo: "kg"
-  rotuloLinha: string // "reps"
+  barras: Serie // eixo da esquerda (ex.: repetições)
+  linha: Serie // eixo da direita (ex.: carga)
+  rotuloBarras: string // unidade no topo do eixo: "reps"
+  rotuloLinha: string // "kg"
 }
 
 const ALTURA = 220
@@ -14,7 +14,8 @@ const M = { topo: 22, direita: 34, base: 22, esquerda: 38 }
 const COR_BARRA = 'var(--color-grafico)'
 const COR_LINHA = 'var(--color-grafico-2)'
 const SUPERFICIE = 'var(--color-cartao)'
-const PASSOS_LINHA = [1, 2, 5, 10, 20, 50, 100]
+const OPACIDADE_BARRA = 0.35 // colunas suaves, translúcidas; a da sessão tocada fica mais forte
+const PASSOS_LINHA = [1, 2, 2.5, 5, 10, 20, 25, 50, 100, 200]
 
 // Coluna com o topo arredondado (4px) e a base reta no zero.
 function coluna(x0: number, x1: number, yTopo: number, yBase: number): string {
@@ -68,7 +69,7 @@ export function GraficoBarrasLinha({ pontos, barras, linha, rotuloBarras, rotulo
     const b = ultimo(s)
     return a == null || b == null ? s.titulo : `${s.titulo}: de ${s.formatar(a)} a ${s.formatar(b)}`
   }
-  const descricao = `${resumo(barras)}; ${resumo(linha)}; de ${pontos[0].data} a ${pontos[n - 1].data}`
+  const descricao = `${resumo(linha)}; ${resumo(barras)}; de ${pontos[0].data} a ${pontos[n - 1].data}`
 
   function apontar(clientX: number) {
     const el = caixa.current
@@ -81,7 +82,7 @@ export function GraficoBarrasLinha({ pontos, barras, linha, rotuloBarras, rotulo
   const valores =
     ativo === null
       ? []
-      : [barras, linha].flatMap((s) => {
+      : [linha, barras].flatMap((s) => {
           const v = s.valores[ativo]
           return v === null ? [] : [s.formatar(v)]
         })
@@ -129,7 +130,14 @@ export function GraficoBarrasLinha({ pontos, barras, linha, rotuloBarras, rotulo
             const v = barras.valores[i]
             if (v === null || v <= 0) return null
             const x0 = cx(i) - larguraBarra / 2
-            return <path key={i} d={coluna(x0, x0 + larguraBarra, yBarra(v), base)} fill={COR_BARRA} opacity={ativo === null || ativo === i ? 1 : 0.55} />
+            return (
+              <path
+                key={i}
+                d={coluna(x0, x0 + larguraBarra, yBarra(v), base)}
+                fill={COR_BARRA}
+                fillOpacity={ativo === i ? 0.75 : OPACIDADE_BARRA}
+              />
+            )
           })}
 
           <path d={caminho} fill="none" stroke={COR_LINHA} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
@@ -163,15 +171,17 @@ export function GraficoBarrasLinha({ pontos, barras, linha, rotuloBarras, rotulo
 
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-suave" data-testid="legenda">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-2.5 rounded-t-[3px]" style={{ background: COR_BARRA }} />
-          {barras.titulo} · eixo da esquerda
-        </span>
-        <span className="flex items-center gap-1.5">
           <svg width="18" height="10" aria-hidden>
             <line x1="1" x2="17" y1="5" y2="5" stroke={COR_LINHA} strokeWidth="2" strokeLinecap="round" />
             <circle cx="9" cy="5" r="3.5" fill={COR_LINHA} stroke={SUPERFICIE} strokeWidth="1.5" />
           </svg>
           {linha.titulo} · eixo da direita
+        </span>
+        <span className="flex items-center gap-1.5">
+          <svg width="10" height="12" aria-hidden>
+            <path d={coluna(0, 10, 0, 12)} fill={COR_BARRA} fillOpacity={OPACIDADE_BARRA} />
+          </svg>
+          {barras.titulo} · eixo da esquerda
         </span>
       </div>
     </div>

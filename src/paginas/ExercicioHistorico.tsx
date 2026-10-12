@@ -19,7 +19,7 @@ interface Indicador {
 interface Analise {
   indicadores: Indicador[]
   pontos: Ponto[] // sessões no gráfico
-  // Força: colunas de carga e linha de repetições. Os outros: uma linha.
+  // Força: linha de carga e colunas de repetições. Os outros: uma linha.
   grafico: { linha: Serie } | { barras: Serie; linha: Serie } | null
 }
 
@@ -92,7 +92,7 @@ function analisar(ex: ItemCatalogo, execs: Execucao[]): Analise {
     }
   }
 
-  // Força: carga máxima de cada sessão (colunas) e as repetições da série com menos (linha);
+  // Força: carga máxima de cada sessão (linha) e as repetições da série com menos (colunas);
   // séries interrompidas, com 0, ficam de fora.
   const maxCarga = (x: Execucao) => Math.max(...x.cargas_kg.filter((c): c is number => c !== null))
   const minReps = (x: Execucao) => {
@@ -111,17 +111,18 @@ function analisar(ex: ItemCatalogo, execs: Execucao[]): Analise {
     ],
     pontos: comCarga.map(ponto),
     grafico: {
-      barras: {
+      linha: {
         titulo: 'Carga máxima',
         valores: comCarga.map(maxCarga),
         formatar: (v) => formatarCarga(v, ex.tipo),
         formatarEixo: numero,
       },
-      linha: {
+      barras: {
         titulo: 'Repetições (série com menos)',
         valores: comCarga.map(minReps),
         formatar: (v) => `${v} reps`,
         formatarEixo: numero,
+        passos: PASSOS_REPS,
       },
     },
   }
@@ -199,8 +200,8 @@ export default function ExercicioHistorico() {
                     pontos={analise.pontos}
                     barras={analise.grafico.barras}
                     linha={analise.grafico.linha}
-                    rotuloBarras={unidadeCarga(ex.tipo).prefixo + 'kg'}
-                    rotuloLinha="reps"
+                    rotuloBarras="reps"
+                    rotuloLinha={unidadeCarga(ex.tipo).prefixo + 'kg'}
                   />
                 ) : (
                   <GraficoEvolucao pontos={analise.pontos} serie={analise.grafico.linha} />
