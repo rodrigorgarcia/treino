@@ -1,10 +1,13 @@
 import { Link, useParams } from 'react-router'
-import { GraficoEvolucao, type Ponto, type Serie } from '../componentes/GraficoEvolucao'
+import { GraficoBarrasLinha } from '../componentes/GraficoBarrasLinha'
+import { GraficoEvolucao } from '../componentes/GraficoEvolucao'
 import { Cabecalho, Carregando, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useExercicio, useHistoricoExercicio } from '../lib/api'
 import {
   dataCurta, diaSemanaCurto, formatarCarga, formatarRitmo, formatarTempo, numero, resumoSeries, rotuloDificuldade,
+  unidadeCarga,
 } from '../lib/formato'
+import type { Ponto, Serie } from '../lib/grafico'
 import type { Execucao, ItemCatalogo } from '../lib/tipos'
 
 interface Indicador {
@@ -16,7 +19,8 @@ interface Indicador {
 interface Analise {
   indicadores: Indicador[]
   pontos: Ponto[] // sessões no gráfico
-  series: Serie[] // uma por painel, alinhadas aos pontos
+  // Força: colunas de carga e linha de repetições. Os outros: uma linha.
+  grafico: { linha: Serie } | { barras: Serie; linha: Serie } | null
 }
 
 const quando = (x: Execucao) => dataCurta(x.sessao_iniciada_em)
@@ -49,15 +53,15 @@ function analisar(ex: ItemCatalogo, execs: Execucao[]): Analise {
       return {
         indicadores,
         pontos: comDistancia.map(ponto),
-        series: [
-          {
+        grafico: {
+          linha: {
             titulo: 'Ritmo por corrida (min/km) · mais baixo é mais rápido',
             valores: comDistancia.map(ritmo),
             formatar: formatarRitmo,
             formatarEixo: minSeg,
             passos: [15, 30, 60, 120, 300], // segundos por km
           },
-        ],
+        },
       }
     }
     const comTempo = execs.filter((x) => x.duracao_s)
@@ -65,14 +69,14 @@ function analisar(ex: ItemCatalogo, execs: Execucao[]): Analise {
     return {
       indicadores: maisLonga ? [{ rotulo: 'Maior duração', valor: formatarTempo(maisLonga.duracao_s!), detalhe: quando(maisLonga) }] : [],
       pontos: comTempo.map(ponto),
-      series: [
-        {
+      grafico: {
+        linha: {
           titulo: 'Duração (min)',
           valores: comTempo.map((x) => x.duracao_s! / 60),
           formatar: (v) => formatarTempo(Math.round(v * 60)),
           formatarEixo: numero,
         },
-      ],
+      },
     }
   }
 
@@ -82,21 +86,21 @@ function analisar(ex: ItemCatalogo, execs: Execucao[]): Analise {
     return {
       indicadores: [{ rotulo: 'Mais repetições', valor: `${total(melhor)}`, detalhe: quando(melhor) }],
       pontos: execs.map(ponto),
-      series: [
-        { titulo: 'Repetições por sessão', valores: execs.map(total), formatar: (v) => `${v} reps`, formatarEixo: numero, passos: PASSOS_REPS },
-      ],
+      grafico: {
+        linha: { titulo: 'Repetições por sessão', valores: execs.map(total), formatar: (v) => `${v} reps`, formatarEixo: numero, passos: PASSOS_REPS },
+      },
     }
   }
 
-  // Força: carga máxima de cada sessão e, no painel de baixo, as repetições da série com menos
-  // (séries interrompidas, com 0, ficam de fora).
+  // Força: carga máxima de cada sessão (colunas) e as repetições da série com menos (linha);
+  // séries interrompidas, com 0, ficam de fora.
   const maxCarga = (x: Execucao) => Math.max(...x.cargas_kg.filter((c): c is number => c !== null))
   const minReps = (x: Execucao) => {
     const feitas = x.reps.filter((r): r is number => r !== null && r > 0)
     return feitas.length ? Math.min(...feitas) : null
   }
   const comCarga = execs.filter((x) => Number.isFinite(maxCarga(x)))
-  if (comCarga.length === 0) return { indicadores: [], pontos: [], series: [] }
+  if (comCarga.length === 0) return { indicadores: [], pontos: [], grafico: null }
   const recorde = Math.max(...comCarga.map(maxCarga))
   const primeiraNoRecorde = comCarga.find((x) => maxCarga(x) === recorde)!
   const primeira = comCarga[0]
@@ -106,21 +110,20 @@ function analisar(ex: ItemCatalogo, execs: Execucao[]): Analise {
       { rotulo: 'Primeira vez', valor: formatarCarga(maxCarga(primeira), ex.tipo), detalhe: quando(primeira) },
     ],
     pontos: comCarga.map(ponto),
-    series: [
-      {
-        titulo: 'Carga máxima por sessão',
+    grafico: {
+      barras: {
+        titulo: 'Carga máxima',
         valores: comCarga.map(maxCarga),
         formatar: (v) => formatarCarga(v, ex.tipo),
         formatarEixo: numero,
       },
-      {
-        titulo: 'Repetições · a série com menos',
+      linha: {
+        titulo: 'Repetições (série com menos)',
         valores: comCarga.map(minReps),
         formatar: (v) => `${v} reps`,
         formatarEixo: numero,
-        passos: PASSOS_REPS,
       },
-    ],
+    },
   }
 }
 
@@ -184,13 +187,23 @@ export default function ExercicioHistorico() {
               ))}
             </div>
 
-            {analise && analise.series.length > 0 && (
+            {analise?.grafico && (
               <section className="mb-6 rounded-2xl border border-borda bg-cartao p-3" data-testid="grafico">
-                {analise.series.length === 1 && <div className="mb-2 text-sm text-suave">{analise.series[0].titulo}</div>}
-                {analise.pontos.length >= 2 ? (
-                  <GraficoEvolucao pontos={analise.pontos} series={analise.series} />
-                ) : (
+                <div className="mb-2 text-sm text-suave">
+                  {'barras' in analise.grafico ? 'Carga e repetições por sessão' : analise.grafico.linha.titulo}
+                </div>
+                {analise.pontos.length < 2 ? (
                   <p className="py-6 text-center text-sm text-fraco">O gráfico aparece a partir da segunda vez.</p>
+                ) : 'barras' in analise.grafico ? (
+                  <GraficoBarrasLinha
+                    pontos={analise.pontos}
+                    barras={analise.grafico.barras}
+                    linha={analise.grafico.linha}
+                    rotuloBarras={unidadeCarga(ex.tipo).prefixo + 'kg'}
+                    rotuloLinha="reps"
+                  />
+                ) : (
+                  <GraficoEvolucao pontos={analise.pontos} serie={analise.grafico.linha} />
                 )}
               </section>
             )}

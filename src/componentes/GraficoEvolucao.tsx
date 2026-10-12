@@ -1,42 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
-
-export interface Ponto {
-  t: number // data, em ms
-  data: string // "04/10"
-  detalhe: string // ex.: "12+10+8 · 57 kg"
-}
-
-// Uma medida ao longo dos pontos. Com mais de uma, cada uma ganha o seu painel, empilhados
-// e alinhados pela data (nunca dois eixos no mesmo gráfico).
-export interface Serie {
-  titulo: string
-  valores: (number | null)[] // um por ponto; null = sem valor nessa sessão
-  formatar: (v: number) => string // tooltip e rótulo final: "57 kg"
-  formatarEixo: (v: number) => string
-  passos?: number[] // passos permitidos no eixo (ex.: tempo em 15 s, 30 s, 1 min…)
-}
+import { passoBonito, type Ponto, type Serie } from '../lib/grafico'
 
 interface Props {
   pontos: Ponto[] // em ordem cronológica
-  series: Serie[]
+  serie: Serie
 }
 
+const ALTURA = 180
 const M = { topo: 22, direita: 14, base: 22, esquerda: 44 }
 const COR = 'var(--color-grafico)'
 const SUPERFICIE = 'var(--color-cartao)'
 
-// Passo "redondo" (1, 2, 2,5, 5 × 10^n, ou um dos `permitidos`) para ~3 divisões do eixo.
-function passoBonito(amplitude: number, permitidos?: number[]): number {
-  const bruto = amplitude / 3
-  if (permitidos?.length) return permitidos.find((p) => p >= bruto) ?? permitidos[permitidos.length - 1]
-  const potencia = 10 ** Math.floor(Math.log10(bruto))
-  const fator = [1, 2, 2.5, 5, 10].find((f) => f * potencia >= bruto) ?? 10
-  return fator * potencia
-}
-
-// Linha de evolução: linha de 2px, pontos de 8px com anel da superfície, grade em hairline,
-// valor mais recente rotulado no fim e tooltip com linha-guia, compartilhada entre os painéis.
-export function GraficoEvolucao({ pontos, series }: Props) {
+// Linha de evolução de uma medida: linha de 2px, pontos de 8px com anel da superfície,
+// grade em hairline, valor mais recente rotulado no fim e tooltip com linha-guia.
+export function GraficoEvolucao({ pontos, serie }: Props) {
   const caixa = useRef<HTMLDivElement>(null)
   const [largura, setLargura] = useState(340)
   const [ativo, setAtivo] = useState<number | null>(null)
@@ -49,86 +26,6 @@ export function GraficoEvolucao({ pontos, series }: Props) {
     return () => obs.disconnect()
   }, [])
 
-  const varios = series.length > 1
-  const altura = varios ? 150 : 180
-  const t0 = pontos[0].t
-  const t1 = pontos[pontos.length - 1].t
-  const larguraUtil = largura - M.esquerda - M.direita
-  const x = (t: number) => M.esquerda + (t1 === t0 ? larguraUtil / 2 : ((t - t0) / (t1 - t0)) * larguraUtil)
-
-  // A linha-guia acha o ponto mais próximo na horizontal.
-  function apontar(clientX: number) {
-    const el = caixa.current
-    if (!el) return
-    const px = clientX - el.getBoundingClientRect().left
-    let melhor = 0
-    pontos.forEach((p, i) => {
-      if (Math.abs(x(p.t) - px) < Math.abs(x(pontos[melhor].t) - px)) melhor = i
-    })
-    setAtivo(melhor)
-  }
-
-  const p = ativo === null ? null : pontos[ativo]
-  const tooltipX = p ? Math.min(Math.max(x(p.t), 80), largura - 80) : 0
-  const valoresAtivos =
-    ativo === null
-      ? []
-      : series.flatMap((s) => {
-          const v = s.valores[ativo]
-          return v === null ? [] : [s.formatar(v)]
-        })
-
-  return (
-    <div
-      ref={caixa}
-      className="relative select-none"
-      style={{ touchAction: 'pan-y' }}
-      onPointerMove={(e) => apontar(e.clientX)}
-      onPointerDown={(e) => apontar(e.clientX)}
-      onPointerLeave={(e) => e.pointerType === 'mouse' && setAtivo(null)}
-    >
-      {series.map((s, n) => (
-        <Painel
-          key={s.titulo}
-          serie={s}
-          pontos={pontos}
-          largura={largura}
-          altura={altura}
-          x={x}
-          ativo={ativo}
-          mostrarTitulo={varios}
-          ultimo={n === series.length - 1}
-        />
-      ))}
-
-      {p && (
-        <div
-          className="pointer-events-none absolute top-0 -translate-x-1/2 rounded-lg border border-borda bg-cartao-2 px-2.5 py-1.5 text-xs shadow-lg"
-          style={{ left: tooltipX }}
-          data-testid="tooltip"
-        >
-          <div className="text-sm font-semibold whitespace-nowrap text-texto tabular-nums">{valoresAtivos.join(' · ')}</div>
-          <div className="whitespace-nowrap text-suave">
-            {p.data} · {p.detalhe}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function Painel({
-  serie, pontos, largura, altura, x, ativo, mostrarTitulo, ultimo,
-}: {
-  serie: Serie
-  pontos: Ponto[]
-  largura: number
-  altura: number
-  x: (t: number) => number
-  ativo: number | null
-  mostrarTitulo: boolean
-  ultimo: boolean // só o painel de baixo mostra as datas
-}) {
   const comValor = pontos.flatMap((pt, i) => (serie.valores[i] === null ? [] : [{ pt, i, v: serie.valores[i]! }]))
   if (comValor.length === 0) return null
 
@@ -145,20 +42,41 @@ function Painel({
   const ticks: number[] = []
   for (let v = y0; v <= y1 + passo / 2; v += passo) ticks.push(Math.round(v * 1000) / 1000)
 
-  // Só o painel de baixo leva as datas; os de cima são mais baixos, sem essa faixa.
-  const base = ultimo ? M.base : 8
-  const alturaSvg = ultimo ? altura : altura - (M.base - 8)
-  const alturaUtil = alturaSvg - M.topo - base
+  const t0 = pontos[0].t
+  const t1 = pontos[pontos.length - 1].t
+  const larguraUtil = largura - M.esquerda - M.direita
+  const alturaUtil = ALTURA - M.topo - M.base
+  const x = (t: number) => M.esquerda + (t1 === t0 ? larguraUtil / 2 : ((t - t0) / (t1 - t0)) * larguraUtil)
   const y = (v: number) => M.topo + (1 - (v - y0) / (y1 - y0)) * alturaUtil
+
   const caminho = comValor.map((c, k) => `${k ? 'L' : 'M'}${x(c.pt.t).toFixed(1)},${y(c.v).toFixed(1)}`).join(' ')
   const fim = comValor[comValor.length - 1]
-  const p = ativo === null ? null : pontos[ativo]
   const descricao = `${serie.titulo}: de ${serie.formatar(comValor[0].v)} em ${comValor[0].pt.data} a ${serie.formatar(fim.v)} em ${fim.pt.data}`
 
+  // A linha-guia acha o ponto mais próximo na horizontal.
+  function apontar(clientX: number) {
+    const el = caixa.current
+    if (!el) return
+    const px = clientX - el.getBoundingClientRect().left
+    let melhor = comValor[0]
+    for (const c of comValor) if (Math.abs(x(c.pt.t) - px) < Math.abs(x(melhor.pt.t) - px)) melhor = c
+    setAtivo(melhor.i)
+  }
+
+  const a = ativo === null ? null : comValor.find((c) => c.i === ativo) ?? null
+  const tooltipX = a ? Math.min(Math.max(x(a.pt.t), 70), largura - 70) : 0
+
   return (
-    <div className={mostrarTitulo && !ultimo ? 'mb-2' : ''}>
-      {mostrarTitulo && <div className="mb-1 text-sm text-suave">{serie.titulo}</div>}
-      <svg width={largura} height={alturaSvg} role="img" aria-label={descricao} className="block">
+    <div ref={caixa} className="relative select-none" style={{ touchAction: 'pan-y' }}>
+      <svg
+        width={largura}
+        height={ALTURA}
+        role="img"
+        aria-label={descricao}
+        onPointerMove={(e) => apontar(e.clientX)}
+        onPointerDown={(e) => apontar(e.clientX)}
+        onPointerLeave={(e) => e.pointerType === 'mouse' && setAtivo(null)}
+      >
         {ticks.map((v) => (
           <g key={v}>
             <line x1={M.esquerda} x2={largura - M.direita} y1={y(v)} y2={y(v)} stroke="var(--color-borda)" strokeWidth={1} />
@@ -167,20 +85,16 @@ function Painel({
             </text>
           </g>
         ))}
-        {ultimo && (
-          <>
-            <text x={M.esquerda} y={alturaSvg - 4} fontSize={11} fill="var(--color-fraco)">
-              {pontos[0].data}
-            </text>
-            {pontos.length > 1 && (
-              <text x={largura - M.direita} y={alturaSvg - 4} textAnchor="end" fontSize={11} fill="var(--color-fraco)">
-                {pontos[pontos.length - 1].data}
-              </text>
-            )}
-          </>
+        <text x={M.esquerda} y={ALTURA - 4} fontSize={11} fill="var(--color-fraco)">
+          {pontos[0].data}
+        </text>
+        {pontos.length > 1 && (
+          <text x={largura - M.direita} y={ALTURA - 4} textAnchor="end" fontSize={11} fill="var(--color-fraco)">
+            {pontos[pontos.length - 1].data}
+          </text>
         )}
 
-        {p && <line x1={x(p.t)} x2={x(p.t)} y1={M.topo - 6} y2={alturaSvg - base} stroke="var(--color-suave)" strokeWidth={1} />}
+        {a && <line x1={x(a.pt.t)} x2={x(a.pt.t)} y1={M.topo - 6} y2={ALTURA - M.base} stroke="var(--color-suave)" strokeWidth={1} />}
 
         <path d={caminho} fill="none" stroke={COR} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
         {comValor.map((c) => (
@@ -188,7 +102,7 @@ function Painel({
         ))}
 
         {/* valor mais recente, no fim da linha */}
-        {!p && (
+        {!a && (
           <text
             x={Math.min(x(fim.pt.t), largura - M.direita)}
             y={y(fim.v) - 10}
@@ -204,6 +118,19 @@ function Painel({
           </text>
         )}
       </svg>
+
+      {a && (
+        <div
+          className="pointer-events-none absolute top-0 -translate-x-1/2 rounded-lg border border-borda bg-cartao-2 px-2.5 py-1.5 text-xs shadow-lg"
+          style={{ left: tooltipX }}
+          data-testid="tooltip"
+        >
+          <div className="text-sm font-semibold text-texto tabular-nums">{serie.formatar(a.v)}</div>
+          <div className="whitespace-nowrap text-suave">
+            {a.pt.data} · {a.pt.detalhe}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
