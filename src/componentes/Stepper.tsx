@@ -18,9 +18,11 @@ export function Stepper({ rotulo, valor, passo, onChange, prefixo = '', sufixo =
   const [editando, setEditando] = useState(false)
   const [texto, setTexto] = useState('')
 
-  function confirmar() {
-    setEditando(false)
-    const limpo = texto.trim().replace(',', '.')
+  // O valor vale a cada tecla, não só quando o campo perde o foco: no iPhone, tocar em
+  // "Registrar" ou "Salvar" não tira o foco do campo, e o número digitado se perderia.
+  function aplicar(t: string) {
+    setTexto(t)
+    const limpo = t.trim().replace(',', '.')
     if (limpo === '') return onChange(null)
     const n = Number(limpo)
     if (Number.isFinite(n) && n >= 0) onChange(arredondar(n))
@@ -47,9 +49,9 @@ export function Stepper({ rotulo, valor, passo, onChange, prefixo = '', sufixo =
             inputMode="decimal"
             aria-label={rotulo}
             value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-            onBlur={confirmar}
-            onKeyDown={(e) => e.key === 'Enter' && confirmar()}
+            onChange={(e) => aplicar(e.target.value)}
+            onBlur={() => setEditando(false)}
+            onKeyDown={(e) => e.key === 'Enter' && setEditando(false)}
             className="h-16 w-full min-w-0 rounded-2xl border border-acento bg-cartao text-center text-4xl font-semibold tabular-nums outline-none"
           />
         ) : (
@@ -95,12 +97,12 @@ export function StepperTempo({ rotulo, segundos, onChange }: { rotulo: string; s
     setEditando(true)
   }
 
-  function confirmar() {
-    setEditando(false)
-    if (min.trim() === '' && seg.trim() === '') return onChange(null)
-    const m = Number(min.trim() || 0)
-    const s = Number(seg.trim() || 0)
-    if (Number.isInteger(m) && Number.isInteger(s) && m >= 0 && s >= 0) onChange(m * 60 + s)
+  // Como no Stepper, o tempo vale a cada tecla (no iPhone, tocar em "Salvar" não tira o foco).
+  function aplicar(m: string, s: string) {
+    setMin(m)
+    setSeg(s)
+    if (m === '' && s === '') return onChange(null)
+    onChange(Number(m || 0) * 60 + Number(s || 0))
   }
 
   const campo = 'h-16 min-w-0 rounded-2xl border border-acento bg-cartao text-center text-4xl font-semibold tabular-nums outline-none'
@@ -120,14 +122,14 @@ export function StepperTempo({ rotulo, segundos, onChange }: { rotulo: string; s
         {editando ? (
           <div
             className="flex min-w-0 flex-1 items-center justify-center gap-1"
-            onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && confirmar()}
+            onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setEditando(false)}
           >
             <input
               autoFocus
               inputMode="numeric"
               aria-label={`${rotulo}: minutos`}
               value={min}
-              onChange={(e) => setMin(e.target.value.replace(/\D/g, ''))}
+              onChange={(e) => aplicar(e.target.value.replace(/\D/g, ''), seg)}
               onFocus={(e) => e.target.select()}
               onKeyDown={(e) => e.key === 'Enter' && campoSeg.current?.focus()}
               className={`${campo} w-0 flex-[3]`}
@@ -139,9 +141,9 @@ export function StepperTempo({ rotulo, segundos, onChange }: { rotulo: string; s
               maxLength={2}
               aria-label={`${rotulo}: segundos`}
               value={seg}
-              onChange={(e) => setSeg(e.target.value.replace(/\D/g, ''))}
+              onChange={(e) => aplicar(min, e.target.value.replace(/\D/g, ''))}
               onFocus={(e) => e.target.select()}
-              onKeyDown={(e) => e.key === 'Enter' && confirmar()}
+              onKeyDown={(e) => e.key === 'Enter' && setEditando(false)}
               className={`${campo} w-0 flex-[2]`}
             />
           </div>

@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { Stepper, StepperTempo } from '../componentes/Stepper'
 import { BotaoPrimario, BotaoSecundario, Cabecalho, Carregando, Chip, Erro, Pagina, Rotulo } from '../componentes/ui'
@@ -114,8 +114,12 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
   const qc = useQueryClient()
   const destino = passada ? `/sessoes/${sessaoId}/editar` : '/sessao'
   const series = registro?.series ?? []
-  const [valores, setValores] = useState<Valores>(() => valoresIniciais(ex, series))
-  const [editando, setEditando] = useState<Serie | null>(null)
+  // Corrigindo cardio de uma sessão passada: abre direto a série que já existe (em geral
+  // há uma só), em vez de um cartão de série nova que seria fácil confundir com ela.
+  const [editando, setEditando] = useState<Serie | null>(() =>
+    passada && ex.tipo === 'cardio' && series.length > 0 ? series[series.length - 1] : null,
+  )
+  const [valores, setValores] = useState<Valores>(() => (editando ? deSerie(editando) : valoresIniciais(ex, series)))
   const [dificuldade, setDificuldade] = useState<Dificuldade | null>(registro?.dificuldade ?? null)
   const [observacao, setObservacao] = useState(registro?.observacao ?? '')
 
@@ -173,7 +177,19 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
     voltarPara(destino)
   }
 
-  function concluirExercicio() {
+  async function concluirExercicio() {
+    // Uma série em edição com mudanças não salvas é salva antes de sair, em vez de descartada.
+    if (editando) {
+      const dados = paraBanco(ex, valores)
+      const alterada = (Object.keys(dados) as (keyof ValoresSerie)[]).some((k) => dados[k] !== editando[k])
+      if (alterada) {
+        try {
+          await atualizar.mutateAsync({ id: editando.id, ...dados })
+        } catch {
+          return // o erro aparece na tela
+        }
+      }
+    }
     const obs = observacao.trim() || null
     const mudou = dificuldade !== (registro?.dificuldade ?? null) || obs !== (registro?.observacao ?? null)
     if (passada && registro?.id && series.length === 0) {
@@ -247,14 +263,15 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
             {dicaSerie && <span className="text-sm text-fraco">{dicaSerie}</span>}
           </div>
 
+          {/* chave: ao trocar de série (ou registrar), um campo aberto para digitar fecha */}
           {ex.tipo === 'cardio' ? (
-            <>
+            <Fragment key={`${editando?.id ?? 'nova'}-${series.length}`}>
               <StepperTempo rotulo="Duração" segundos={valores.duracaoS} onChange={mudar('duracaoS')} />
               <Stepper rotulo="Distância" valor={valores.distanciaKm} passo={0.1} sufixo="km" onChange={mudar('distanciaKm')} />
               <Stepper rotulo="Andares" valor={valores.andares} passo={1} onChange={mudar('andares')} />
-            </>
+            </Fragment>
           ) : (
-            <>
+            <Fragment key={`${editando?.id ?? 'nova'}-${series.length}`}>
               <Stepper rotulo="Reps" valor={valores.reps} passo={1} sufixo={lado ? `reps${lado}` : 'reps'} onChange={mudar('reps')} />
               {ex.tipo !== 'peso_corporal' && (
                 <Stepper
@@ -266,7 +283,7 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
                   onChange={mudar('carga')}
                 />
               )}
-            </>
+            </Fragment>
           )}
 
           {editando ? (
@@ -336,7 +353,7 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
           <BotaoSecundario
             className="w-full"
             onClick={concluirExercicio}
-            disabled={concluir.isPending || registrar.isPending || remover.isPending || (series.length > 0 && !registro?.id)}
+            disabled={concluir.isPending || registrar.isPending || atualizar.isPending || remover.isPending || (series.length > 0 && !registro?.id)}
           >
             {series.length > 0 ? (passada ? 'Pronto' : 'Concluir exercício') : 'Voltar sem registrar'}
           </BotaoSecundario>
