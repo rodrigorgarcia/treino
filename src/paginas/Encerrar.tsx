@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { BotaoPrimario, BotaoSecundario, Cabecalho, Carregando, Cronometro, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useCatalogo, useDescartarSessao, useEncerrarSessao, useExecucoes } from '../lib/api'
 import { contarExercicios, resumoSeries, rotuloDificuldade, tituloSugerido } from '../lib/formato'
@@ -27,6 +27,7 @@ export default function Encerrar() {
       return ex ? [{ x, ex }] : []
     })
   const sugerido = tituloSugerido(feitos.map((f) => f.ex.regiao))
+  const semDificuldade = feitos.filter((f) => !f.x.dificuldade) // "Como foi?" é obrigatório
   const erro = encerrar.error ?? descartar.error ?? catalogo.error ?? execucoes.error
   const campo = 'w-full rounded-xl border border-borda bg-cartao px-4 py-3 outline-none focus:border-acento'
 
@@ -55,6 +56,26 @@ export default function Encerrar() {
           </section>
         ) : (
           <>
+            {semDificuldade.length > 0 && (
+              <section className="mb-6 rounded-2xl border border-alerta/40 bg-alerta/10 p-4" data-testid="sem-dificuldade">
+                <div className="mb-1 font-medium text-alerta">Falta dizer como foi</div>
+                <p className="mb-3 text-sm text-suave">Para encerrar, escolha “Como foi?” em cada exercício:</p>
+                <ul className="space-y-2">
+                  {semDificuldade.map(({ x, ex }) => (
+                    <li key={x.id}>
+                      <Link
+                        to={`/sessao/exercicio/${ex.id}`}
+                        className="flex items-center justify-between rounded-xl border border-alerta/40 bg-cartao px-4 py-3 active:bg-cartao-2"
+                      >
+                        <span className="font-medium">{ex.nome}</span>
+                        <span className="text-sm text-alerta">responder ›</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             <ul className="mb-6 divide-y divide-borda overflow-hidden rounded-2xl border border-borda bg-cartao">
               {feitos.map(({ x, ex }) => (
                 <li key={x.id} className="px-4 py-3">
@@ -83,7 +104,7 @@ export default function Encerrar() {
             </div>
 
             <BotaoPrimario
-              disabled={encerrar.isPending}
+              disabled={encerrar.isPending || semDificuldade.length > 0}
               onClick={() =>
                 encerrar.mutate(
                   {

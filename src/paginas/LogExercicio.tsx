@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { Fragment, useState } from 'react'
+import { Fragment, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { Stepper, StepperTempo } from '../componentes/Stepper'
 import { BotaoPrimario, BotaoSecundario, Cabecalho, Carregando, Chip, Erro, Pagina, Rotulo } from '../componentes/ui'
@@ -122,6 +122,11 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
   const [valores, setValores] = useState<Valores>(() => (editando ? deSerie(editando) : valoresIniciais(ex, series)))
   const [dificuldade, setDificuldade] = useState<Dificuldade | null>(registro?.dificuldade ?? null)
   const [observacao, setObservacao] = useState(registro?.observacao ?? '')
+  // Na sessão em andamento, "Como foi?" é obrigatório para concluir um exercício com séries.
+  // (Na correção de sessões passadas não: o histórico importado tem exercícios sem dificuldade.)
+  const exigeDificuldade = !passada && series.length > 0
+  const [faltaDificuldade, setFaltaDificuldade] = useState(false)
+  const blocoDificuldade = useRef<HTMLElement>(null)
 
   const registrar = useRegistrarSerie(sessaoId, ex.id)
   const atualizar = useAtualizarSerie(sessaoId, ex.id)
@@ -178,6 +183,11 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
   }
 
   async function concluirExercicio() {
+    if (exigeDificuldade && !dificuldade) {
+      setFaltaDificuldade(true)
+      blocoDificuldade.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
     // Uma série em edição com mudanças não salvas é salva antes de sair, em vez de descartada.
     if (editando) {
       const dados = paraBanco(ex, valores)
@@ -333,15 +343,27 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
           </section>
         )}
 
-        <section>
-          <Rotulo>Como foi?</Rotulo>
-          <div className="mb-3 flex flex-wrap gap-2">
+        <section ref={blocoDificuldade}>
+          <Rotulo>Como foi?{exigeDificuldade && ' · obrigatório'}</Rotulo>
+          <div className={`mb-3 flex flex-wrap gap-2 ${faltaDificuldade && !dificuldade ? 'rounded-2xl ring-2 ring-alerta ring-offset-4 ring-offset-fundo' : ''}`}>
             {DIFICULDADES.map((d) => (
-              <Chip key={d.valor} ativo={dificuldade === d.valor} onClick={() => setDificuldade(dificuldade === d.valor ? null : d.valor)}>
+              <Chip
+                key={d.valor}
+                ativo={dificuldade === d.valor}
+                onClick={() => {
+                  setDificuldade(dificuldade === d.valor ? null : d.valor)
+                  setFaltaDificuldade(false)
+                }}
+              >
                 {d.rotulo}
               </Chip>
             ))}
           </div>
+          {faltaDificuldade && !dificuldade && (
+            <p className="mb-3 text-sm text-alerta" role="alert">
+              Escolha como foi para concluir o exercício.
+            </p>
+          )}
           <textarea
             placeholder="Observação (opcional)"
             aria-label="Observação"

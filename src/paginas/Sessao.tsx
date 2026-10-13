@@ -44,15 +44,26 @@ export default function Sessao() {
             <div className="flex flex-wrap gap-2">
               {feitosHoje
                 .sort((a, b) => feitos.get(a.id)!.iniciado_em.localeCompare(feitos.get(b.id)!.iniciado_em))
-                .map((e) => (
-                  <Link
-                    key={e.id}
-                    to={`/sessao/exercicio/${e.id}`}
-                    className="rounded-full border border-acento/40 bg-acento/10 px-3 py-2 text-sm text-acento"
-                  >
-                    ✓ {e.nome}
-                  </Link>
-                ))}
+                .map((e) =>
+                  feitos.get(e.id)!.dificuldade ? (
+                    <Link
+                      key={e.id}
+                      to={`/sessao/exercicio/${e.id}`}
+                      className="rounded-full border border-acento/40 bg-acento/10 px-3 py-2 text-sm text-acento"
+                    >
+                      ✓ {e.nome}
+                    </Link>
+                  ) : (
+                    // falta dizer "Como foi?": obrigatório para encerrar a sessão
+                    <Link
+                      key={e.id}
+                      to={`/sessao/exercicio/${e.id}`}
+                      className="rounded-full border border-alerta/50 bg-alerta/10 px-3 py-2 text-sm text-alerta"
+                    >
+                      {e.nome} · como foi?
+                    </Link>
+                  ),
+                )}
             </div>
           </section>
         )}
