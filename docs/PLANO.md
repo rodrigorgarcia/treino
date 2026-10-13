@@ -19,7 +19,7 @@ Um app de celular para registrar o treino **durante** o treino, com o mínimo de
 |---|---|
 | Montagem da sessão | **Livre.** A sessão começa vazia e você escolhe os exercícios no catálogo. Sem rotinas nem planejamento na v1. |
 | Próxima carga | **Sem recomendação.** O app mostra a última execução e usa os valores dela para preencher os campos. |
-| Plataforma | **PWA** (app web instalável na tela inicial do celular). |
+| Plataforma | **PWA** (app web instalável na tela inicial do celular). Uso principal: **Android, no Chrome**; o iPhone também funciona. Testes e decisões de interface priorizam o Android. |
 | Conexão | **Online.** Grava direto no Supabase, sem modo offline. |
 | Banco | **Postgres no Supabase**, com Auth e RLS (cada usuário só vê os próprios dados). |
 
@@ -430,7 +430,9 @@ Sem importar o histórico, o passo 4 vira `select public.seed_catalogo('<seu use
 1. *Add new project → Import an existing project → GitHub* e escolha `rodrigorgarcia/treino`. O comando de build, a pasta `dist` e a versão do Node já vêm do `netlify.toml`.
 2. Antes de publicar, em *Environment variables*, crie `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`. Se publicar antes, rode um novo deploy depois de criar as variáveis, porque elas entram no build.
 3. *Deploy*.
-4. No iPhone, abra a URL no Safari → Compartilhar → *Adicionar à Tela de Início*.
+4. Instalar no celular:
+   - **Android (uso principal):** abra a URL no Chrome e toque em *Instalar*, no aviso do app ou no menu ⋮ → *Instalar app* (ou *Adicionar à tela inicial*).
+   - **iPhone:** abra a URL no Safari → Compartilhar → *Adicionar à Tela de Início*.
 
 **Publicar mudanças:** no Netlify, a branch de produção é a `main`, e *Branch deploys* fica em *None*. Cada ajuste vai num PR contra a `main`. Cada push no PR gera um Deploy Preview, sem gastar créditos, com URL própria (`deploy-preview-N--treinorrg.netlify.app`) e usando o Supabase real. O merge na `main` publica em produção, com um deploy que custa 15 créditos. Por isso, junte vários ajustes num PR e faça um merge só. Se o deploy falhar na etapa de publicação com "HTTP Error 500" e "internal system error", o erro é da Netlify: use *Retry deploy*.
 
