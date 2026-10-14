@@ -143,7 +143,8 @@ Resumo das séries: se todas são iguais, `3×12 · 30 kg`. Se as reps variam, `
 
 ### 4.6 Catálogo
 
-- **Exercício**: nome, grupo, aparelho, tipo de carga, reps por lado, passo, índice e nota fixa. Um exercício **arquivado** some da navegação, mas o histórico dele continua guardado.
+- **Exercício**: nome, grupo, aparelho, tipo de carga, reps por lado, passo, índice e nota fixa. Um exercício **arquivado** some da lista da sessão, mas continua na consulta de exercícios (marcado, no fim do grupo), com o histórico. Arquivar e reativar ficam no histórico do exercício.
+- **Semanas desde a última vez**: badge com o número de semanas completas (dias ÷ 7, para baixo) nas listas de exercícios, na sessão e na consulta, e no histórico do exercício. Nunca feito: sem badge. Feito hoje na sessão: mostra ✓.
 - **Aparelho**: nome, passo e observação (ex.: "vai até 100 kg, de 10 em 10").
 - **Onde editar**: "Editar" no histórico do exercício, "editar" na tela de log (para acertar o passo no meio do treino) e "Aparelhos" na tela de exercícios. Exercício novo pode ser criado na sessão ou na tela de exercícios.
 - **Excluir** só vale para exercício nunca feito e aparelho sem exercícios; o banco recusa o resto. Para um exercício já feito, use arquivar. Trocar o tipo de carga de um exercício já feito não muda os números gravados, só como aparecem (o app avisa).

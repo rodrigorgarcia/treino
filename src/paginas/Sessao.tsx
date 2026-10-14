@@ -69,7 +69,7 @@ export default function Sessao() {
         )}
 
         <ListaExercicios
-          catalogo={catalogo.data}
+          catalogo={catalogo.data?.filter((e) => !e.arquivado)} // arquivados ficam só na consulta
           carregando={catalogo.isPending}
           link={(e) => `/sessao/exercicio/${e.id}`}
           feitos={feitos}

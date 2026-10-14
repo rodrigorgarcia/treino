@@ -5,7 +5,6 @@ import { Navigate, Route, Routes } from 'react-router'
 import { Carregando } from './componentes/ui'
 import { supabase } from './lib/supabase'
 import Aparelhos from './paginas/Aparelhos'
-import Arquivados from './paginas/Arquivados'
 import EditarAparelho from './paginas/EditarAparelho'
 import EditarExercicio from './paginas/EditarExercicio'
 import EditarSessao, { AdicionarNaSessao } from './paginas/EditarSessao'
@@ -47,7 +46,6 @@ export default function App() {
       <Route path="/sessoes/:id/exercicio/:exercicioId" element={<LogExercicioPassado />} />
       <Route path="/exercicios" element={<Exercicios />} />
       <Route path="/exercicios/novo" element={<EditarExercicio />} />
-      <Route path="/exercicios/arquivados" element={<Arquivados />} />
       <Route path="/exercicios/:id" element={<ExercicioHistorico />} />
       <Route path="/exercicios/:id/editar" element={<EditarExercicio />} />
       <Route path="/aparelhos" element={<Aparelhos />} />

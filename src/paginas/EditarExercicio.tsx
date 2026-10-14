@@ -84,7 +84,7 @@ function Editar({ id }: { id: string }) {
       <Pagina>
         {ex.arquivado && (
           <p className="mb-4 rounded-xl border border-borda bg-cartao-2 px-3 py-2 text-sm text-suave">
-            Arquivado: não aparece nas listas, mas o histórico continua.
+            Arquivado: não aparece na lista da sessão; continua na consulta de exercícios.
           </p>
         )}
         <FormExercicio
@@ -102,17 +102,17 @@ function Editar({ id }: { id: string }) {
         </FormExercicio>
 
         <section className="mt-10 border-t border-borda pt-5">
-          <Rotulo>{ex.arquivado ? 'Arquivado' : 'Tirar do catálogo'}</Rotulo>
+          <Rotulo>{ex.arquivado ? 'Arquivado' : 'Arquivar'}</Rotulo>
           {ex.arquivado ? (
             <BotaoSecundario className="w-full" disabled={ocupado} onClick={() => arquivar(false)}>
-              Restaurar para o catálogo
+              Reativar
             </BotaoSecundario>
           ) : (
             <>
               <BotaoSecundario className="w-full" disabled={ocupado} onClick={() => arquivar(true)}>
                 Arquivar
               </BotaoSecundario>
-              <p className="mt-1.5 text-sm text-fraco">Some das listas; o histórico continua e dá para restaurar.</p>
+              <p className="mt-1.5 text-sm text-fraco">Some da lista da sessão; continua na consulta de exercícios, com o histórico, e dá para reativar.</p>
             </>
           )}
           {usos === 0 ? (

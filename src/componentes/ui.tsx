@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { useNavigate } from 'react-router'
-import { formatarDuracao } from '../lib/formato'
+import { formatarDuracao, semanasDesde } from '../lib/formato'
 import { useAgora } from '../lib/useAgora'
 import { useVoltar } from '../lib/useVoltar'
 
@@ -94,6 +94,22 @@ export function Cronometro({ desde }: { desde: string }) {
   const agora = useAgora()
   const minutos = Math.max(0, Math.floor((agora - Date.parse(desde)) / 60_000))
   return <span className="tabular-nums">{formatarDuracao(minutos)}</span>
+}
+
+// Badge com as semanas completas desde a última vez que o exercício foi feito.
+export function Semanas({ desde }: { desde: string }) {
+  const n = semanasDesde(desde)
+  const texto = n === 1 ? '1 semana desde a última vez' : `${n} semanas desde a última vez`
+  return (
+    <span
+      title={texto}
+      aria-label={texto}
+      data-testid="semanas"
+      className="inline-grid h-7 min-w-7 shrink-0 place-items-center rounded-full border border-borda bg-cartao-2 px-1.5 text-sm font-semibold text-suave tabular-nums"
+    >
+      {n}
+    </span>
+  )
 }
 
 // pequeno: chip de segundo nível (ex.: subgrupos abaixo das regiões), com destaque mais leve.

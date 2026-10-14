@@ -150,7 +150,7 @@ export function AdicionarNaSessao() {
       <Pagina>
         <Erro>{catalogo.error && mensagemDeErro(catalogo.error)}</Erro>
         <ListaExercicios
-          catalogo={catalogo.data}
+          catalogo={catalogo.data?.filter((e) => !e.arquivado)}
           carregando={catalogo.isPending}
           link={(e) => `/sessoes/${id}/exercicio/${e.id}`}
           substituir

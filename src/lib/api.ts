@@ -27,7 +27,6 @@ export const chaves = {
   sessaoAberta: ['sessao-aberta'] as const,
   sessoesRecentes: ['sessoes-recentes'] as const,
   catalogo: ['catalogo'] as const,
-  arquivados: ['arquivados'] as const,
   exercicio: (id: string) => ['exercicio', id] as const,
   exercicioEdicao: (id: string) => ['exercicio-edicao', id] as const,
   execucoes: (sessaoId: string) => ['execucoes', sessaoId] as const,
@@ -111,10 +110,11 @@ export function useSessaoDetalhe(id: string) {
   })
 }
 
+// Todos os exercícios, inclusive arquivados: a consulta mostra todos, a lista da sessão filtra.
 export function useCatalogo() {
   return useQuery({
     queryKey: chaves.catalogo,
-    queryFn: () => rodar<ItemCatalogo[]>(supabase.from('v_catalogo').select('*').eq('arquivado', false)),
+    queryFn: () => rodar<ItemCatalogo[]>(supabase.from('v_catalogo').select('*')),
     staleTime: 5 * 60_000,
   })
 }
@@ -124,13 +124,6 @@ export function useExercicio(id: string) {
   return useQuery({
     queryKey: chaves.exercicio(id),
     queryFn: () => rodar<ItemCatalogo | null>(supabase.from('v_catalogo').select('*').eq('id', id).maybeSingle()),
-  })
-}
-
-export function useArquivados() {
-  return useQuery({
-    queryKey: chaves.arquivados,
-    queryFn: () => rodar<ItemCatalogo[]>(supabase.from('v_catalogo').select('*').eq('arquivado', true).order('nome')),
   })
 }
 
@@ -392,7 +385,7 @@ export function useAtualizarExercicio() {
   return useMutation({
     mutationFn: ({ id, ...campos }: { id: string } & Partial<DadosExercicio & { arquivado: boolean }>) =>
       rodar(supabase.from('exercicios').update(campos).eq('id', id)),
-    onSuccess: (_, { id }) => recarregar(qc, [chaves.catalogo, chaves.arquivados, chaves.exercicio(id)]),
+    onSuccess: (_, { id }) => recarregar(qc, [chaves.catalogo, chaves.exercicio(id)]),
   })
 }
 

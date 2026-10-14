@@ -1,11 +1,11 @@
 import { Link, useParams } from 'react-router'
 import { GraficoBarrasLinha } from '../componentes/GraficoBarrasLinha'
 import { GraficoEvolucao } from '../componentes/GraficoEvolucao'
-import { Cabecalho, Carregando, Erro, Pagina, Rotulo } from '../componentes/ui'
-import { mensagemDeErro, useExercicio, useHistoricoExercicio } from '../lib/api'
+import { Cabecalho, Carregando, Erro, Pagina, Rotulo, Semanas } from '../componentes/ui'
+import { mensagemDeErro, useAtualizarExercicio, useExercicio, useHistoricoExercicio } from '../lib/api'
 import {
   dataCurta, diaSemanaCurto, formatarCarga, formatarRitmo, formatarTempo, numero, resumoSeries, rotuloDificuldade,
-  unidadeCarga,
+  semanasDesde, unidadeCarga,
 } from '../lib/formato'
 import type { Ponto, Serie } from '../lib/grafico'
 import type { Execucao, ItemCatalogo } from '../lib/tipos'
@@ -132,11 +132,12 @@ export default function ExercicioHistorico() {
   const { id = '' } = useParams()
   const exercicio = useExercicio(id)
   const historico = useHistoricoExercicio(id)
+  const atualizar = useAtualizarExercicio()
 
   if (exercicio.isPending || historico.isPending) return <Carregando />
   const ex = exercicio.data
   const execs = historico.data ?? [] // da mais recente para a mais antiga
-  const erro = exercicio.error ?? historico.error
+  const erro = exercicio.error ?? historico.error ?? atualizar.error
 
   if (!ex) {
     return (
@@ -172,6 +173,32 @@ export default function ExercicioHistorico() {
           {ex.aparelho ? `${ex.aparelho} · ${ex.grupo}` : ex.grupo}
           {ex.arquivado && <span className="ml-2 rounded-md bg-cartao-2 px-1.5 py-0.5 text-xs text-fraco">arquivado</span>}
         </p>
+
+        {/* Semanas desde a última vez e arquivar: arquivado some da lista da sessão, mas fica aqui. */}
+        <div className="mb-4 flex items-center justify-between gap-3" data-testid="situacao">
+          {ex.ultima_em ? (
+            <span className="flex items-center gap-2 text-sm text-suave">
+              <Semanas desde={ex.ultima_em} />
+              {semanasDesde(ex.ultima_em) === 1 ? 'semana' : 'semanas'} desde a última vez
+            </span>
+          ) : (
+            <span className="text-sm text-fraco">Ainda não foi feito.</span>
+          )}
+          <button
+            onClick={() => atualizar.mutate({ id, arquivado: !ex.arquivado })}
+            disabled={atualizar.isPending}
+            className={`h-9 shrink-0 rounded-xl border px-3 text-sm font-medium disabled:opacity-50 ${
+              ex.arquivado ? 'border-acento/50 text-acento' : 'border-borda text-suave'
+            }`}
+          >
+            {ex.arquivado ? 'Reativar' : 'Arquivar'}
+          </button>
+        </div>
+        {ex.arquivado && (
+          <p className="mb-4 rounded-xl border border-borda bg-cartao-2 px-3 py-2 text-sm text-suave">
+            Arquivado: não aparece na lista da sessão. Reative para voltar a usar.
+          </p>
+        )}
         {ex.nota && <p className="mb-4 rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm text-alerta">{ex.nota}</p>}
 
         {execs.length === 0 ? (

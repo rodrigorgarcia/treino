@@ -202,6 +202,11 @@ export function diasDesde(iso: string, agora = new Date()): number {
   return Math.round((b - a) / 86_400_000)
 }
 
+// Semanas completas desde a data: 0 a 6 dias = 0, 7 a 13 = 1…
+export function semanasDesde(iso: string, agora = new Date()): number {
+  return Math.floor(diasDesde(iso, agora) / 7)
+}
+
 export function haQuanto(iso: string, agora = new Date()): string {
   const dias = diasDesde(iso, agora)
   if (dias === 0) return 'hoje'
