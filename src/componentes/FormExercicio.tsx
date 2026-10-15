@@ -30,15 +30,12 @@ export function FormExercicio({
   const [tipo, setTipo] = useState<TipoExercicio>(inicial?.tipo ?? (regiaoInicial === 'cardio' ? 'cardio' : 'carga'))
   const [porLado, setPorLado] = useState(inicial?.reps_por_lado ?? false)
   const [passo, setPasso] = useState(inicial?.incremento_kg != null ? numero(inicial.incremento_kg) : '')
-  const [indice, setIndice] = useState(inicial?.indice != null ? String(inicial.indice) : '')
   const [nota, setNota] = useState(inicial?.nota ?? '')
 
   const aparelho = aparelhos.find((a) => a.id === aparelhoId)
   const usaCarga = tipo !== 'cardio' && tipo !== 'peso_corporal'
   const passoKg = lerNumero(passo)
-  const indiceN = lerNumero(indice)
   const passoInvalido = usaCarga && passoKg !== null && !(passoKg > 0 && passoKg < 1000)
-  const indiceInvalido = indiceN !== null && !(Number.isInteger(indiceN) && indiceN > 0 && indiceN < 10000)
   const rotuloTipo = TIPOS.find((t) => t.valor === tipo)?.rotulo
 
   function salvar(e: FormEvent) {
@@ -50,7 +47,6 @@ export function FormExercicio({
       tipo,
       reps_por_lado: tipo !== 'cardio' && porLado,
       incremento_kg: usaCarga ? passoKg : (inicial?.incremento_kg ?? null),
-      indice: indiceN,
       nota: nota.trim() || null,
     })
   }
@@ -124,7 +120,7 @@ export function FormExercicio({
       <details open={maisOpcoesAbertas} className="group">
         <summary className="cursor-pointer list-none py-1 [&::-webkit-details-marker]:hidden text-sm font-medium text-suave">
           <span className="inline-block transition-transform group-open:rotate-90">›</span> Mais opções
-          <span className="font-normal text-fraco"> · {usaCarga ? 'passo, ' : ''}número e nota</span>
+          <span className="font-normal text-fraco"> · {usaCarga ? 'passo e nota' : 'nota'}</span>
         </summary>
         <div className="mt-4 space-y-5">
           {usaCarga && (
@@ -149,18 +145,6 @@ export function FormExercicio({
               />
             </Campo>
           )}
-          <Campo
-            rotulo="Número no seu índice"
-            dica={
-              indiceInvalido ? (
-                <span className="text-perigo">Use um número inteiro, como 16.</span>
-              ) : (
-                `Aparece antes do nome na lista, como #${indiceN ?? 16}.`
-              )
-            }
-          >
-            <input inputMode="numeric" value={indice} onChange={(e) => setIndice(e.target.value)} className={CAMPO} placeholder="Opcional" />
-          </Campo>
           <Campo rotulo="Nota fixa" dica="Aparece em destaque na tela de registro.">
             <textarea
               rows={2}
@@ -173,7 +157,7 @@ export function FormExercicio({
         </div>
       </details>
 
-      <BotaoPrimario type="submit" disabled={salvando || !nome.trim() || !grupoId || passoInvalido || indiceInvalido}>
+      <BotaoPrimario type="submit" disabled={salvando || !nome.trim() || !grupoId || passoInvalido}>
         {botao}
       </BotaoPrimario>
     </form>

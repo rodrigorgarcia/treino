@@ -40,7 +40,7 @@ Um app de celular para registrar o treino **durante** o treino, com o mínimo de
 | Observações do dia: "ajuste de pegada", "caiu na última" | Observação livre no exercício da sessão. |
 | Correções depois do treino ("foi 35 kg, não 20 kg") | Sessões passadas podem ser **editadas**. |
 | Cardio em 12 sessões: tempo + distância (corrida), tempo + andares (climbmill), protocolo de intervalos | Exercícios do tipo cardio, no mesmo fluxo dos outros. |
-| Ordem "livre", "pelo índice" ou "por bloco de aparelho" | Navegar por grupo **ou** por aparelho, ordenando pelo número do seu índice. |
+| Ordem "livre", "pelo índice" ou "por bloco de aparelho" | Navegar por grupo **ou** por aparelho, em ordem alfabética. (O número do índice, #16, foi usado até 15/10/2026 e saiu: só metade dos exercícios tinha.) |
 | Título e objetivo da sessão ("Treino Inferiores", "Reativação após 27 dias") | Campos opcionais, preenchidos ao encerrar. |
 | 17 "Não realizado" | Na sessão livre só existe o que foi feito. Na importação, eles viram uma linha na observação da sessão. |
 
@@ -73,7 +73,7 @@ POSTERIOR
 [+ Novo exercício]
 ```
 
-- **Abas por região** (Superiores · Inferiores · Core · Cardio). Dentro de cada aba, seções por grupo (Peito, Costas…), ordenadas pelo seu índice.
+- **Abas por região** (Superiores · Inferiores · Core · Cardio). Dentro de cada aba, seções por grupo (Peito, Costas…), com os exercícios em ordem alfabética.
 - **Agrupar por aparelho** (Cross Cable, Halteres, Leg press…) para os treinos por bloco.
 - **Busca** por nome.
 - Cada linha mostra a **última execução** em uma linha curta. O que já foi feito hoje ganha ✓ e aparece em "Feitos hoje".
@@ -143,7 +143,7 @@ Resumo das séries: se todas são iguais, `3×12 · 30 kg`. Se as reps variam, `
 
 ### 4.6 Catálogo
 
-- **Exercício**: nome, grupo, aparelho, tipo de carga, reps por lado, passo, índice e nota fixa. Um exercício **arquivado** some da lista da sessão, mas continua na consulta de exercícios (marcado, no fim do grupo), com o histórico. Arquivar e reativar ficam no histórico do exercício.
+- **Exercício**: nome, grupo, aparelho, tipo de carga, reps por lado, passo e nota fixa. Um exercício **arquivado** some da lista da sessão, mas continua na consulta de exercícios (marcado, no fim do grupo), com o histórico. Arquivar e reativar ficam no histórico do exercício.
 - **Semanas desde a última vez**: badge com o número de semanas completas (dias ÷ 7, para baixo) nas listas de exercícios, na sessão e na consulta, e no histórico do exercício. Nunca feito: sem badge. Feito hoje na sessão: mostra ✓.
 - **Aparelho**: nome, passo e observação (ex.: "vai até 100 kg, de 10 em 10").
 - **Onde editar**: "Editar" no histórico do exercício, "editar" na tela de log (para acertar o passo no meio do treino) e "Aparelhos" na tela de exercícios. Exercício novo pode ser criado na sessão ou na tela de exercícios.
@@ -179,7 +179,7 @@ erDiagram
     tipo_exercicio tipo "carga, carga_por_lado, carga_adicional, peso_corporal, cardio"
     boolean reps_por_lado
     numeric incremento_kg "null = do aparelho"
-    smallint indice "seu numero no indice"
+    smallint indice "sem uso desde 15/10"
     text nota "nota fixa"
     boolean arquivado
   }

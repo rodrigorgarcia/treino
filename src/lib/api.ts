@@ -136,7 +136,7 @@ export function useExercicioEdicao(id: string) {
         rodar<Exercicio | null>(
           supabase
             .from('exercicios')
-            .select('id, nome, grupo_id, aparelho_id, tipo, reps_por_lado, incremento_kg, indice, nota, arquivado')
+            .select('id, nome, grupo_id, aparelho_id, tipo, reps_por_lado, incremento_kg, nota, arquivado')
             .eq('id', id)
             .maybeSingle(),
         ),
