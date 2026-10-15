@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { REGIOES, dataCurta, resumoSeries } from '../lib/formato'
 import type { Execucao, ItemCatalogo, Regiao } from '../lib/tipos'
-import { Carregando, Chip, Rotulo } from './ui'
+import { Carregando, Chip, Rotulo, Semanas } from './ui'
 
 type Modo = 'grupo' | 'aparelho'
 
@@ -21,8 +21,9 @@ function salvarPreferencia(chave: string, valor: string) {
   }
 }
 
-const porIndice = (a: ItemCatalogo, b: ItemCatalogo) =>
-  (a.indice ?? 999) - (b.indice ?? 999) || a.nome.localeCompare(b.nome, 'pt-BR')
+// Por nome, com os arquivados no fim de cada grupo.
+const porNome = (a: ItemCatalogo, b: ItemCatalogo) =>
+  Number(a.arquivado) - Number(b.arquivado) || a.nome.localeCompare(b.nome, 'pt-BR')
 
 interface Props {
   catalogo: ItemCatalogo[] | undefined
@@ -58,7 +59,7 @@ export function ListaExercicios({ catalogo, carregando, link, substituir = false
     const lista = catalogo ?? []
     const termo = busca.trim().toLocaleLowerCase('pt-BR')
     if (termo) {
-      return [{ titulo: 'Resultados', itens: lista.filter((e) => e.nome.toLocaleLowerCase('pt-BR').includes(termo)).sort(porIndice) }]
+      return [{ titulo: 'Resultados', itens: lista.filter((e) => e.nome.toLocaleLowerCase('pt-BR').includes(termo)).sort(porNome) }]
     }
     const mapa = new Map<string, { titulo: string; ordem: number | string; itens: ItemCatalogo[] }>()
     for (const e of lista) {
@@ -70,7 +71,7 @@ export function ListaExercicios({ catalogo, carregando, link, substituir = false
     }
     return [...mapa.values()]
       .sort((a, b) => (typeof a.ordem === 'number' && typeof b.ordem === 'number' ? a.ordem - b.ordem : String(a.ordem).localeCompare(String(b.ordem), 'pt-BR')))
-      .map((s) => ({ ...s, itens: s.itens.sort(porIndice) }))
+      .map((s) => ({ ...s, itens: s.itens.sort(porNome) }))
   }, [catalogo, busca, modo, aba, filtroGrupo])
 
   return (
@@ -172,13 +173,17 @@ function ItemExercicio({ ex, para, substituir, hoje }: { ex: ItemCatalogo; para:
   return (
     <li>
       <Link to={para} replace={substituir} className="flex items-center gap-3 px-4 py-3 active:bg-cartao-2">
-        <div className="min-w-0 flex-1">
+        <div className={`min-w-0 flex-1 ${ex.arquivado ? 'opacity-55' : ''}`}>
           <div className="truncate font-medium">
-            {ex.indice !== null && <span className="mr-1.5 text-sm text-fraco tabular-nums">#{ex.indice}</span>}
             {ex.nome}
           </div>
-          <div className={`truncate text-sm ${hoje ? 'text-acento' : 'text-fraco'}`}>{detalhe}</div>
+          <div className={`truncate text-sm ${hoje ? 'text-acento' : 'text-fraco'}`}>
+            {ex.arquivado && <span className="mr-1.5 rounded-md bg-cartao-2 px-1.5 py-0.5 text-xs">arquivado</span>}
+            {detalhe}
+          </div>
         </div>
+        {/* semanas desde a última vez (feito hoje mostra ✓) */}
+        {!hoje && ex.ultima_em && <Semanas desde={ex.ultima_em} />}
         {hoje ? <span className="text-xl text-acento">✓</span> : <span className="text-2xl text-fraco">›</span>}
       </Link>
     </li>

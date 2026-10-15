@@ -1,14 +1,13 @@
 import { Link, useNavigate } from 'react-router'
 import { ListaExercicios } from '../componentes/ListaExercicios'
 import { BotaoSecundario, Cabecalho, Erro, Pagina } from '../componentes/ui'
-import { mensagemDeErro, useArquivados, useCatalogo } from '../lib/api'
+import { mensagemDeErro, useCatalogo } from '../lib/api'
 
-// Catálogo fora da sessão: cada exercício abre o seu histórico e evolução; daqui também se cria e edita.
+// Catálogo fora da sessão, com os arquivados (marcados, no fim de cada grupo): cada exercício
+// abre o seu histórico e evolução, de onde se arquiva, reativa e edita.
 export default function Exercicios() {
   const navigate = useNavigate()
   const catalogo = useCatalogo()
-  const arquivados = useArquivados()
-  const nArquivados = arquivados.data?.length ?? 0
 
   return (
     <>
@@ -29,16 +28,9 @@ export default function Exercicios() {
           carregando={catalogo.isPending}
           link={(e) => `/exercicios/${e.id}`}
           rodape={(regiao) => (
-            <>
-              <BotaoSecundario className="w-full" onClick={() => navigate(`/exercicios/novo?regiao=${regiao}`)}>
-                + Novo exercício
-              </BotaoSecundario>
-              {nArquivados > 0 && (
-                <Link to="/exercicios/arquivados" className="mt-3 block py-2 text-center text-sm text-fraco">
-                  Arquivados ({nArquivados})
-                </Link>
-              )}
-            </>
+            <BotaoSecundario className="w-full" onClick={() => navigate(`/exercicios/novo?regiao=${regiao}`)}>
+              + Novo exercício
+            </BotaoSecundario>
           )}
         />
       </Pagina>

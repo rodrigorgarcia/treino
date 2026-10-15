@@ -27,7 +27,6 @@ export const chaves = {
   sessaoAberta: ['sessao-aberta'] as const,
   sessoesRecentes: ['sessoes-recentes'] as const,
   catalogo: ['catalogo'] as const,
-  arquivados: ['arquivados'] as const,
   exercicio: (id: string) => ['exercicio', id] as const,
   exercicioEdicao: (id: string) => ['exercicio-edicao', id] as const,
   execucoes: (sessaoId: string) => ['execucoes', sessaoId] as const,
@@ -111,10 +110,11 @@ export function useSessaoDetalhe(id: string) {
   })
 }
 
+// Todos os exercícios, inclusive arquivados: a consulta mostra todos, a lista da sessão filtra.
 export function useCatalogo() {
   return useQuery({
     queryKey: chaves.catalogo,
-    queryFn: () => rodar<ItemCatalogo[]>(supabase.from('v_catalogo').select('*').eq('arquivado', false)),
+    queryFn: () => rodar<ItemCatalogo[]>(supabase.from('v_catalogo').select('*')),
     staleTime: 5 * 60_000,
   })
 }
@@ -127,13 +127,6 @@ export function useExercicio(id: string) {
   })
 }
 
-export function useArquivados() {
-  return useQuery({
-    queryKey: chaves.arquivados,
-    queryFn: () => rodar<ItemCatalogo[]>(supabase.from('v_catalogo').select('*').eq('arquivado', true).order('nome')),
-  })
-}
-
 // O exercício como está na tabela (passo próprio pode ser null) e em quantas sessões aparece.
 export function useExercicioEdicao(id: string) {
   return useQuery({
@@ -143,7 +136,7 @@ export function useExercicioEdicao(id: string) {
         rodar<Exercicio | null>(
           supabase
             .from('exercicios')
-            .select('id, nome, grupo_id, aparelho_id, tipo, reps_por_lado, incremento_kg, indice, nota, arquivado')
+            .select('id, nome, grupo_id, aparelho_id, tipo, reps_por_lado, incremento_kg, nota, arquivado')
             .eq('id', id)
             .maybeSingle(),
         ),
@@ -392,7 +385,7 @@ export function useAtualizarExercicio() {
   return useMutation({
     mutationFn: ({ id, ...campos }: { id: string } & Partial<DadosExercicio & { arquivado: boolean }>) =>
       rodar(supabase.from('exercicios').update(campos).eq('id', id)),
-    onSuccess: (_, { id }) => recarregar(qc, [chaves.catalogo, chaves.arquivados, chaves.exercicio(id)]),
+    onSuccess: (_, { id }) => recarregar(qc, [chaves.catalogo, chaves.exercicio(id)]),
   })
 }
 

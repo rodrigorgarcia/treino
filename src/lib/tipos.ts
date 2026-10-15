@@ -52,7 +52,6 @@ export interface ItemCatalogo {
   nome: string
   tipo: TipoExercicio
   reps_por_lado: boolean
-  indice: number | null
   nota: string | null
   arquivado: boolean
   incremento_kg: number
@@ -136,7 +135,6 @@ export interface Exercicio {
   tipo: TipoExercicio
   reps_por_lado: boolean
   incremento_kg: number | null // null = usa o passo do aparelho
-  indice: number | null
   nota: string | null
   arquivado: boolean
 }
