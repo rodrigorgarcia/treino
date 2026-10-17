@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { ListaExercicios } from '../componentes/ListaExercicios'
-import { BotaoSecundario, Cabecalho, Cronometro, Erro, Pagina, Rotulo } from '../componentes/ui'
+import { BotaoSecundario, Cabecalho, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useCatalogo, useExecucoes } from '../lib/api'
 import type { Execucao } from '../lib/tipos'
 import { useSessao } from './useSessao'
@@ -24,11 +24,7 @@ export default function Sessao() {
     <>
       <Cabecalho
         voltar="/"
-        titulo={
-          <>
-            Sessão · <Cronometro desde={sessao.iniciada_em} />
-          </>
-        }
+        titulo="Sessão"
         direita={
           <button onClick={() => navigate('/sessao/encerrar')} className="h-10 rounded-xl px-3 font-medium text-acento">
             Encerrar
