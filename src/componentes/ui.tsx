@@ -1,10 +1,12 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
-import { useNavigate } from 'react-router'
-import { formatarDuracao, semanasDesde } from '../lib/formato'
+import { useContext, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { Link, useNavigate } from 'react-router'
+import { relogio, tempoDesde } from '../lib/formato'
+import { SessaoAbertaContext } from '../lib/sessaoAberta'
 import { useAgora } from '../lib/useAgora'
 import { useVoltar } from '../lib/useVoltar'
 
 // voltarNoHistorico: volta para a tela anterior (ex.: início ou histórico); sem histórico, vai para `voltar`.
+// Com uma sessão em andamento, mostra o cronômetro dela (toque leva para a sessão).
 export function Cabecalho({
   titulo,
   voltar,
@@ -18,6 +20,7 @@ export function Cabecalho({
 }) {
   const navigate = useNavigate()
   const voltarPara = useVoltar()
+  const sessaoDesde = useContext(SessaoAbertaContext)
   return (
     <header className="sticky top-0 z-10 border-b border-borda bg-fundo/95 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="flex h-14 items-center gap-1 px-4">
@@ -31,6 +34,17 @@ export function Cabecalho({
           </button>
         )}
         <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">{titulo}</h1>
+        {sessaoDesde && (
+          <Link
+            to="/sessao"
+            aria-label="Tempo de sessão"
+            data-testid="cronometro-sessao"
+            className="mx-1 flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-acento/40 bg-acento/10 px-3 text-base font-semibold text-acento"
+          >
+            <IconeCronometro />
+            <Cronometro desde={sessaoDesde} />
+          </Link>
+        )}
         {direita}
       </div>
     </header>
@@ -89,25 +103,34 @@ export function Campo({ rotulo, dica, children }: { rotulo: ReactNode; dica?: Re
   )
 }
 
-// Tempo desde o início da sessão.
+// Tempo desde o início da sessão, em horas e minutos ("0:42").
 export function Cronometro({ desde }: { desde: string }) {
   const agora = useAgora()
   const minutos = Math.max(0, Math.floor((agora - Date.parse(desde)) / 60_000))
-  return <span className="tabular-nums">{formatarDuracao(minutos)}</span>
+  return <span className="tabular-nums">{relogio(minutos)}</span>
 }
 
-// Badge com as semanas completas desde a última vez que o exercício foi feito.
-export function Semanas({ desde }: { desde: string }) {
-  const n = semanasDesde(desde)
-  const texto = n === 1 ? '1 semana desde a última vez' : `${n} semanas desde a última vez`
+function IconeCronometro() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
+      <circle cx="12" cy="13.5" r="7.5" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 13.5V9.5M10 3h4M18.5 6.5l1.5-1.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// Badge com o tempo desde a última vez que o exercício foi feito: "3d" até 7 dias, depois "2s".
+export function TempoDesde({ desde }: { desde: string }) {
+  const t = tempoDesde(desde)
+  const texto = `${t.longo} desde a última vez`
   return (
     <span
       title={texto}
       aria-label={texto}
-      data-testid="semanas"
-      className="inline-grid h-7 min-w-7 shrink-0 place-items-center rounded-full border border-borda bg-cartao-2 px-1.5 text-sm font-semibold text-suave tabular-nums"
+      data-testid="desde"
+      className="inline-grid h-7 min-w-7 shrink-0 place-items-center rounded-full border border-borda bg-cartao-2 px-2 text-sm font-semibold text-suave tabular-nums"
     >
-      {n}
+      {t.curto}
     </span>
   )
 }

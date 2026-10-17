@@ -202,9 +202,18 @@ export function diasDesde(iso: string, agora = new Date()): number {
   return Math.round((b - a) / 86_400_000)
 }
 
-// Semanas completas desde a data: 0 a 6 dias = 0, 7 a 13 = 1…
-export function semanasDesde(iso: string, agora = new Date()): number {
-  return Math.floor(diasDesde(iso, agora) / 7)
+// Tempo desde a última vez, para a badge: até 7 dias em dias ("3d"); depois, em semanas
+// completas ("1s" de 8 a 13 dias, "2s" de 14 a 20…).
+export function tempoDesde(iso: string, agora = new Date()): { curto: string; longo: string } {
+  const dias = diasDesde(iso, agora)
+  if (dias <= 7) return { curto: `${dias}d`, longo: dias === 1 ? '1 dia' : `${dias} dias` }
+  const semanas = Math.floor(dias / 7)
+  return { curto: `${semanas}s`, longo: semanas === 1 ? '1 semana' : `${semanas} semanas` }
+}
+
+// Cronômetro em horas e minutos: "0:42", "1:05".
+export function relogio(minutos: number): string {
+  return `${Math.floor(minutos / 60)}:${String(minutos % 60).padStart(2, '0')}`
 }
 
 export function haQuanto(iso: string, agora = new Date()): string {
