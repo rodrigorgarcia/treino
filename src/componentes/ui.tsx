@@ -1,6 +1,6 @@
 import { useContext, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { relogio, tempoDesde } from '../lib/formato'
+import { relogio, tempoDesde, type FaixaTempo } from '../lib/formato'
 import { SessaoAbertaContext } from '../lib/sessaoAberta'
 import { useAgora } from '../lib/useAgora'
 import { useVoltar } from '../lib/useVoltar'
@@ -120,6 +120,13 @@ function IconeCronometro() {
 }
 
 // Badge com o tempo desde a última vez que o exercício foi feito: "3d" até 7 dias, depois "2s".
+// Tons pastel, discretos: verde até 7 dias, âmbar até 4 semanas, azul depois disso.
+const COR_FAIXA: Record<FaixaTempo, string> = {
+  dias: 'border-pastel-verde/30 bg-pastel-verde/10 text-pastel-verde',
+  semanas: 'border-pastel-ambar/30 bg-pastel-ambar/10 text-pastel-ambar',
+  longe: 'border-pastel-azul/30 bg-pastel-azul/10 text-pastel-azul',
+}
+
 export function TempoDesde({ desde }: { desde: string }) {
   const t = tempoDesde(desde)
   const texto = `${t.longo} desde a última vez`
@@ -128,7 +135,8 @@ export function TempoDesde({ desde }: { desde: string }) {
       title={texto}
       aria-label={texto}
       data-testid="desde"
-      className="inline-grid h-7 min-w-7 shrink-0 place-items-center rounded-full border border-borda bg-cartao-2 px-2 text-sm font-semibold text-suave tabular-nums"
+      data-faixa={t.faixa}
+      className={`inline-grid h-7 min-w-7 shrink-0 place-items-center rounded-full border px-2 text-sm font-semibold tabular-nums ${COR_FAIXA[t.faixa]}`}
     >
       {t.curto}
     </span>
