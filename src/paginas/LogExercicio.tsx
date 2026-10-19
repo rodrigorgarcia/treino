@@ -8,9 +8,10 @@ import {
   useRegistrarSerie, useRegistro, useRemoverDaSessao, useSessaoDetalhe, type ValoresSerie,
 } from '../lib/api'
 import {
-  DIFICULDADES, dataCurta, diaSemanaCurto, formatarSerie, haQuanto, numero, resumoSeries, rotuloDificuldade, sufixoLado,
-  unidadeCarga,
+  DIFICULDADES, dataCurta, diaSemanaCurto, formatarCarga, formatarSerie, haQuanto, numero, resumoReps, resumoSeries,
+  rotuloDificuldade, sufixoLado, unidadeCarga,
 } from '../lib/formato'
+import { sugestaoDeSubirCarga } from '../lib/progressao'
 import type { Dificuldade, ItemCatalogo, Registro, Serie } from '../lib/tipos'
 import { useVoltar } from '../lib/useVoltar'
 import { useSessao } from './useSessao'
@@ -220,6 +221,7 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
 
   const carga = unidadeCarga(ex.tipo)
   const lado = sufixoLado(ex.reps_por_lado, ex.regiao)
+  const subir = passada ? null : sugestaoDeSubirCarga(ex, series)
 
   return (
     <>
@@ -236,6 +238,12 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
         </p>
 
         {ex.nota && <p className="mb-3 rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm text-alerta">{ex.nota}</p>}
+        {subir && (
+          <p className="mb-3 rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm text-alerta" data-testid="subir-carga">
+            ↑ Hora de subir a carga: {resumoReps(subir.reps)}
+            {lado} na última vez.{subir.carga !== null && ` Tente ${formatarCarga(subir.carga, ex.tipo)}.`}
+          </p>
+        )}
 
         {passada ? (
           <p className="mb-4 rounded-xl border border-borda bg-cartao-2 px-3 py-2 text-sm text-suave" data-testid="corrigindo">

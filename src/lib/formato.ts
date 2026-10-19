@@ -63,7 +63,7 @@ export function sufixoLado(porLado: boolean, regiao: Regiao): string {
   return regiao === 'inferiores' ? '/perna' : '/lado'
 }
 
-function resumoReps(reps: number[]): string {
+export function resumoReps(reps: number[]): string {
   if (reps.length > 1 && reps.every((r) => r === reps[0])) return `${reps.length}×${reps[0]}`
   return reps.join('+')
 }
