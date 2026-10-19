@@ -1,11 +1,11 @@
 import { Link, useParams } from 'react-router'
 import { GraficoBarrasLinha } from '../componentes/GraficoBarrasLinha'
 import { GraficoEvolucao } from '../componentes/GraficoEvolucao'
-import { Cabecalho, Carregando, Erro, Pagina, Rotulo, Semanas } from '../componentes/ui'
+import { Cabecalho, Carregando, Erro, Pagina, Rotulo, TempoDesde } from '../componentes/ui'
 import { mensagemDeErro, useAtualizarExercicio, useExercicio, useHistoricoExercicio } from '../lib/api'
 import {
   dataCurta, diaSemanaCurto, formatarCarga, formatarRitmo, formatarTempo, numero, resumoSeries, rotuloDificuldade,
-  semanasDesde, unidadeCarga,
+  tempoDesde, unidadeCarga,
 } from '../lib/formato'
 import type { Ponto, Serie } from '../lib/grafico'
 import type { Execucao, ItemCatalogo } from '../lib/tipos'
@@ -174,12 +174,12 @@ export default function ExercicioHistorico() {
           {ex.arquivado && <span className="ml-2 rounded-md bg-cartao-2 px-1.5 py-0.5 text-xs text-fraco">arquivado</span>}
         </p>
 
-        {/* Semanas desde a última vez e arquivar: arquivado some da lista da sessão, mas fica aqui. */}
+        {/* Tempo desde a última vez e arquivar: arquivado some da lista da sessão, mas fica aqui. */}
         <div className="mb-4 flex items-center justify-between gap-3" data-testid="situacao">
           {ex.ultima_em ? (
             <span className="flex items-center gap-2 text-sm text-suave">
-              <Semanas desde={ex.ultima_em} />
-              {semanasDesde(ex.ultima_em) === 1 ? 'semana' : 'semanas'} desde a última vez
+              <TempoDesde desde={ex.ultima_em} />
+              {tempoDesde(ex.ultima_em).longo} desde a última vez
             </span>
           ) : (
             <span className="text-sm text-fraco">Ainda não foi feito.</span>

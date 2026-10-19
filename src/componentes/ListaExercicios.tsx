@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { REGIOES, dataCurta, resumoSeries } from '../lib/formato'
 import type { Execucao, ItemCatalogo, Regiao } from '../lib/tipos'
-import { Carregando, Chip, Rotulo, Semanas } from './ui'
+import { Carregando, Chip, Rotulo, TempoDesde } from './ui'
 
 type Modo = 'grupo' | 'aparelho'
 
@@ -182,8 +182,8 @@ function ItemExercicio({ ex, para, substituir, hoje }: { ex: ItemCatalogo; para:
             {detalhe}
           </div>
         </div>
-        {/* semanas desde a última vez (feito hoje mostra ✓) */}
-        {!hoje && ex.ultima_em && <Semanas desde={ex.ultima_em} />}
+        {/* tempo desde a última vez (feito hoje mostra ✓) */}
+        {!hoje && ex.ultima_em && <TempoDesde desde={ex.ultima_em} />}
         {hoje ? <span className="text-xl text-acento">✓</span> : <span className="text-2xl text-fraco">›</span>}
       </Link>
     </li>

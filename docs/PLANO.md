@@ -144,7 +144,9 @@ Resumo das séries: se todas são iguais, `3×12 · 30 kg`. Se as reps variam, `
 ### 4.6 Catálogo
 
 - **Exercício**: nome, grupo, aparelho, tipo de carga, reps por lado, passo e nota fixa. Um exercício **arquivado** some da lista da sessão, mas continua na consulta de exercícios (marcado, no fim do grupo), com o histórico. Arquivar e reativar ficam no histórico do exercício.
-- **Semanas desde a última vez**: badge com o número de semanas completas (dias ÷ 7, para baixo) nas listas de exercícios, na sessão e na consulta, e no histórico do exercício. Nunca feito: sem badge. Feito hoje na sessão: mostra ✓.
+- **Tempo desde a última vez**: badge nas listas de exercícios, na sessão e na consulta, e no histórico do exercício. Até 7 dias mostra dias ("3d"); depois, semanas completas ("1s" de 8 a 13 dias, "2s" de 14 a 20…). Cor discreta, em tom pastel, por faixa: verde até 7 dias, âmbar até 4 semanas, azul depois disso. Nunca feito: sem badge. Feito hoje na sessão: mostra ✓.
+- **Aviso para subir a carga**: na tela de registro, quando na última vez houve pelo menos duas séries com 12 reps ou mais e mais uma com 10 ou mais, aparece um aviso (no estilo da nota) sugerindo a maior carga daquela vez mais um passo. Some depois de registrar uma série acima dela. Não vale para cardio, peso corporal nem na correção de sessões passadas.
+- **Cronômetro da sessão**: com uma sessão em andamento, o topo de todas as telas mostra o tempo dela em horas e minutos (0:42); tocar leva para a sessão.
 - **Aparelho**: nome, passo e observação (ex.: "vai até 100 kg, de 10 em 10").
 - **Onde editar**: "Editar" no histórico do exercício, "editar" na tela de log (para acertar o passo no meio do treino) e "Aparelhos" na tela de exercícios. Exercício novo pode ser criado na sessão ou na tela de exercícios.
 - **Excluir** só vale para exercício nunca feito e aparelho sem exercícios; o banco recusa o resto. Para um exercício já feito, use arquivar. Trocar o tipo de carga de um exercício já feito não muda os números gravados, só como aparecem (o app avisa).

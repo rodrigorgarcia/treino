@@ -12,6 +12,10 @@
   --color-acento-escuro: #0b0b0f;
   --color-alerta: #fbbf24;
   --color-perigo: #f87171;
+  /* Badge do tempo desde a última vez */
+  --color-pastel-verde: #9ee3b4;
+  --color-pastel-ambar: #f2d38a;
+  --color-pastel-azul: #9dc6f2;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
