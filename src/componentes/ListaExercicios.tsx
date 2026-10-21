@@ -1,25 +1,11 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { REGIOES, detalheExercicio } from '../lib/formato'
+import { lerPreferencia, salvarPreferencia } from '../lib/preferencias'
 import type { Execucao, ItemCatalogo, Regiao } from '../lib/tipos'
 import { Carregando, Chip, Rotulo, TempoDesde } from './ui'
 
 type Modo = 'grupo' | 'aparelho'
-
-function lerPreferencia<T extends string>(chave: string, padrao: T): T {
-  try {
-    return (localStorage.getItem(chave) as T) || padrao
-  } catch {
-    return padrao
-  }
-}
-function salvarPreferencia(chave: string, valor: string) {
-  try {
-    localStorage.setItem(chave, valor)
-  } catch {
-    /* sem armazenamento: só não lembra */
-  }
-}
 
 // Por nome, com os arquivados no fim de cada grupo.
 const porNome = (a: ItemCatalogo, b: ItemCatalogo) =>

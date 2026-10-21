@@ -158,6 +158,7 @@ A sessão de sempre é o **treino livre**: os exercícios entram conforme você 
 
 - **Montar treino:** o catálogo, com busca, regiões e badges, em que tocar marca ou desmarca. Cada marcado mostra a ordem (1, 2, 3…), e a barra de baixo lista os escolhidos (tocar desmarca). **Começar treino** cria a sessão, e o cronômetro começa aí.
 - **Sessão:** a lista na ordem marcada, com o progresso ("3 de 6 feitos"). Cada exercício mostra o estado: vazio (número), falta "como foi?" ou ✓, e o que foi feito hoje ou a última vez. Tocar abre a tela de registro de sempre.
+- **Agrupar por** Nenhum, Grupo ou Aparelho, acima da lista. Agrupado, as seções seguem a ordem em que aparecem no treino e cada exercício mantém o número da sua posição. O app lembra a escolha.
 - **Tirar:** deslizar o exercício para a esquerda mostra **Tirar**. Vazio sai na hora; com séries, o app confirma antes de apagar.
 - **+ Adicionar exercícios:** a mesma tela de montar. Os que já estão no treino aparecem marcados, e os novos entram no fim.
 - **Encerrar:** bloqueado enquanto houver exercício zerado ou sem "Como foi?".
