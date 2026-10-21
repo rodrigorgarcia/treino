@@ -4,9 +4,15 @@ import { ListaExercicios } from '../componentes/ListaExercicios'
 import { BotaoSecundario, Cabecalho, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useCatalogo, useExecucoes } from '../lib/api'
 import type { Execucao } from '../lib/tipos'
+import SessaoProgramada from './SessaoProgramada'
 import { useSessao } from './useSessao'
 
 export default function Sessao() {
+  return useSessao().modalidade === 'programado' ? <SessaoProgramada /> : <SessaoLivre />
+}
+
+// Sessão livre: o catálogo inteiro; os exercícios entram conforme são feitos.
+function SessaoLivre() {
   const sessao = useSessao()
   const navigate = useNavigate()
   const catalogo = useCatalogo()

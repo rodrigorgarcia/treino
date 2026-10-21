@@ -212,12 +212,53 @@ export function useAparelho(id: string) {
 
 // ─── Sessão ──────────────────────────────────────────────────
 
+// Sem plano: sessão livre. Com plano: treino programado, já com os exercícios escolhidos.
 export function useIniciarSessao() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: () => rodar<Sessao>(supabase.from('sessoes').insert({ titulo: null }).select().single()),
+    mutationFn: async (plano?: string[]) => {
+      const dados: Partial<Sessao> = plano ? { titulo: null, modalidade: 'programado' } : { titulo: null }
+      const sessao = await rodar<Sessao>(supabase.from('sessoes').insert(dados).select().single())
+      if (plano?.length) await incluirNoPlano(sessao.id, plano)
+      return sessao
+    },
     onSuccess: (sessao) => qc.setQueryData(chaves.sessaoAberta, sessao),
     onError: () => qc.invalidateQueries({ queryKey: chaves.sessaoAberta }), // já havia uma aberta
+  })
+}
+
+// Exercícios do treino programado, ainda sem séries. A ordem da sessão é a de iniciado_em:
+// cada um entra 1 ms depois do anterior, na ordem em que foi marcado.
+function incluirNoPlano(sessaoId: string, exercicios: string[]) {
+  const agora = Date.now()
+  return rodar(
+    supabase.from('sessao_exercicios').insert(
+      exercicios.map((exercicio_id, i) => ({ sessao_id: sessaoId, exercicio_id, iniciado_em: new Date(agora + i).toISOString() })),
+    ),
+  )
+}
+
+export function useAdicionarAoPlano(sessaoId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (exercicios: string[]) => incluirNoPlano(sessaoId, exercicios),
+    onSettled: () => qc.invalidateQueries({ queryKey: chaves.execucoes(sessaoId), refetchType: 'all' }),
+  })
+}
+
+// Tirar um exercício da sessão em andamento pela lista: some na hora; o banco apaga em seguida
+// (com as séries, se houver).
+export function useTirarDaSessao(sessaoId: string) {
+  const qc = useQueryClient()
+  const chave = chaves.execucoes(sessaoId)
+  return useMutation({
+    mutationFn: ({ registroId }: { registroId: string; exercicioId: string }) =>
+      rodar(supabase.from('sessao_exercicios').delete().eq('id', registroId)),
+    onMutate: async ({ registroId }) => {
+      await qc.cancelQueries({ queryKey: chave })
+      qc.setQueryData<Execucao[]>(chave, (lista) => lista?.filter((x) => x.id !== registroId))
+    },
+    onSettled: (_dados, _erro, { exercicioId }) => aposMudarRegistro(qc, sessaoId, exercicioId),
   })
 }
 

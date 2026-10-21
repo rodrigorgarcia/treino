@@ -27,7 +27,9 @@ export default function Inicio() {
 
         {sessao ? (
           <section className="mb-8 rounded-3xl border border-acento/30 bg-cartao p-5">
-            <div className="mb-1 text-sm text-suave">Sessão em andamento</div>
+            <div className="mb-1 text-sm text-suave">
+              {sessao.modalidade === 'programado' ? 'Treino programado em andamento' : 'Sessão em andamento'}
+            </div>
             <div className="mb-4 text-2xl font-semibold">
               Desde {horaCurta(sessao.iniciada_em)} · <Cronometro desde={sessao.iniciada_em} />
             </div>
@@ -43,13 +45,25 @@ export default function Inicio() {
           </section>
         ) : (
           <section className="mb-8">
-            <BotaoPrimario
-              className="h-20 text-xl"
-              disabled={iniciar.isPending}
-              onClick={() => iniciar.mutate(undefined, { onSuccess: () => navigate('/sessao') })}
-            >
-              {iniciar.isPending ? 'Iniciando…' : 'Iniciar sessão'}
-            </BotaoPrimario>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                disabled={iniciar.isPending}
+                onClick={() => iniciar.mutate(undefined, { onSuccess: () => navigate('/sessao') })}
+                className="rounded-2xl bg-acento px-4 py-4 text-left text-acento-escuro active:opacity-80 disabled:opacity-50"
+              >
+                <span className="block text-sm">Treino</span>
+                <span className="block text-2xl font-bold">Livre</span>
+                <span className="mt-1 block text-sm opacity-75">escolhe na hora</span>
+              </button>
+              <button
+                onClick={() => navigate('/montar')}
+                className="rounded-2xl border border-acento/40 bg-cartao px-4 py-4 text-left active:bg-cartao-2"
+              >
+                <span className="block text-sm text-suave">Treino</span>
+                <span className="block text-2xl font-bold text-acento">Programado</span>
+                <span className="mt-1 block text-sm text-fraco">monta a lista antes</span>
+              </button>
+            </div>
             {ultima && (
               <p className="mt-3 text-center text-sm text-suave">
                 Último treino {haQuanto(ultima.iniciada_em)} · {ultima.titulo ?? 'sem título'}

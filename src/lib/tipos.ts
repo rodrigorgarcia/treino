@@ -4,6 +4,10 @@ export type Regiao = 'superiores' | 'inferiores' | 'core' | 'cardio'
 export type TipoExercicio = 'carga' | 'carga_por_lado' | 'carga_adicional' | 'peso_corporal' | 'cardio'
 export type Dificuldade = 'facil' | 'na_medida' | 'dificil' | 'muito_dificil' | 'falha'
 
+// livre: os exercícios entram conforme são feitos. programado: a sessão começa com uma lista
+// escolhida antes (exercícios ainda sem séries) e só encerra sem nenhum zerado.
+export type Modalidade = 'livre' | 'programado'
+
 export interface Sessao {
   id: string
   iniciada_em: string
@@ -11,6 +15,7 @@ export interface Sessao {
   titulo: string | null
   objetivo: string | null
   observacao: string | null
+  modalidade: Modalidade // migração 20261021120000
 }
 
 // v_sessoes

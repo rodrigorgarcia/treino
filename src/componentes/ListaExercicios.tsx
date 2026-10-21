@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { REGIOES, dataCurta, resumoSeries } from '../lib/formato'
+import { REGIOES, detalheExercicio } from '../lib/formato'
 import type { Execucao, ItemCatalogo, Regiao } from '../lib/tipos'
 import { Carregando, Chip, Rotulo, TempoDesde } from './ui'
 
@@ -25,10 +25,18 @@ function salvarPreferencia(chave: string, valor: string) {
 const porNome = (a: ItemCatalogo, b: ItemCatalogo) =>
   Number(a.arquivado) - Number(b.arquivado) || a.nome.localeCompare(b.nome, 'pt-BR')
 
+// Montar o treino programado: tocar marca ou desmarca em vez de abrir, e o círculo mostra a ordem.
+export interface Escolha {
+  ordem: (id: string) => number | null // posição entre os marcados (1, 2…), ou null
+  jaNoTreino?: Set<string> // já estão no treino: aparecem marcados, sem desmarcar
+  alternar: (ex: ItemCatalogo) => void
+}
+
 interface Props {
   catalogo: ItemCatalogo[] | undefined
   carregando: boolean
-  link: (ex: ItemCatalogo) => string // para onde cada exercício leva
+  link?: (ex: ItemCatalogo) => string // para onde cada exercício leva
+  escolha?: Escolha // no lugar de link
   substituir?: boolean // o link substitui a tela atual no histórico (escolher e seguir)
   feitos?: Map<string, Execucao> // feitos na sessão de hoje (marca ✓ e mostra o resumo de hoje)
   rodape?: (regiao: Regiao) => ReactNode
@@ -36,7 +44,7 @@ interface Props {
 
 // Catálogo navegável: busca, regiões, subgrupos e agrupamento por grupo ou aparelho,
 // com a última execução em cada linha. Usado na sessão e na tela de exercícios.
-export function ListaExercicios({ catalogo, carregando, link, substituir = false, feitos, rodape }: Props) {
+export function ListaExercicios({ catalogo, carregando, link, escolha, substituir = false, feitos, rodape }: Props) {
   const [aba, setAba] = useState<Regiao>(() => lerPreferencia('treino.aba', 'superiores'))
   const [modo, setModo] = useState<Modo>(() => lerPreferencia('treino.modo', 'grupo'))
   const [subgrupo, setSubgrupo] = useState<string | null>(() => lerPreferencia('treino.subgrupo', '') || null)
@@ -142,7 +150,7 @@ export function ListaExercicios({ catalogo, carregando, link, substituir = false
             <Rotulo>{s.titulo}</Rotulo>
             <ul className="divide-y divide-borda overflow-hidden rounded-2xl border border-borda bg-cartao">
               {s.itens.map((e) => (
-                <ItemExercicio key={e.id} ex={e} para={link(e)} substituir={substituir} hoje={feitos?.get(e.id)} />
+                <ItemExercicio key={e.id} ex={e} para={link?.(e)} escolha={escolha} substituir={substituir} hoje={feitos?.get(e.id)} />
               ))}
               {s.itens.length === 0 && <li className="px-4 py-3 text-fraco">Nenhum exercício.</li>}
             </ul>
@@ -155,35 +163,53 @@ export function ListaExercicios({ catalogo, carregando, link, substituir = false
   )
 }
 
-function ItemExercicio({ ex, para, substituir, hoje }: { ex: ItemCatalogo; para: string; substituir: boolean; hoje?: Execucao }) {
-  let detalhe: string
-  if (hoje) {
-    detalhe = 'hoje: ' + resumoSeries(ex, { reps: hoje.reps, cargas: hoje.cargas_kg, duracao_s: hoje.duracao_s, distancia_m: hoje.distancia_m, andares: hoje.andares })
-  } else if (ex.ultima_em) {
-    detalhe = `${dataCurta(ex.ultima_em)} · ` + resumoSeries(ex, {
-      reps: ex.ultima_reps ?? [],
-      cargas: ex.ultima_cargas_kg ?? [],
-      duracao_s: ex.ultima_duracao_s,
-      distancia_m: ex.ultima_distancia_m,
-      andares: ex.ultima_andares,
-    })
-  } else {
-    detalhe = 'nunca feito'
+function ItemExercicio({ ex, para, escolha, substituir, hoje }: { ex: ItemCatalogo; para?: string; escolha?: Escolha; substituir: boolean; hoje?: Execucao }) {
+  const info = (
+    <div className={`min-w-0 flex-1 ${ex.arquivado ? 'opacity-55' : ''}`}>
+      <div className="truncate font-medium">
+        {ex.nome}
+      </div>
+      <div className={`truncate text-sm ${hoje ? 'text-acento' : 'text-fraco'}`}>
+        {ex.arquivado && <span className="mr-1.5 rounded-md bg-cartao-2 px-1.5 py-0.5 text-xs">arquivado</span>}
+        {detalheExercicio(ex, hoje)}
+      </div>
+    </div>
+  )
+  // tempo desde a última vez (feito hoje mostra ✓)
+  const desde = !hoje && ex.ultima_em && <TempoDesde desde={ex.ultima_em} />
+
+  if (escolha) {
+    const noTreino = escolha.jaNoTreino?.has(ex.id) ?? false
+    const n = escolha.ordem(ex.id)
+    const marca = noTreino
+      ? 'border border-acento/40 bg-acento/10 text-acento'
+      : n !== null
+        ? 'bg-acento font-semibold text-acento-escuro'
+        : 'border-2 border-borda'
+    return (
+      <li>
+        <button
+          type="button"
+          aria-pressed={noTreino || n !== null}
+          disabled={noTreino}
+          onClick={() => escolha.alternar(ex)}
+          className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-cartao-2"
+        >
+          {info}
+          {desde}
+          <span aria-hidden className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm tabular-nums ${marca}`}>
+            {noTreino ? '✓' : n}
+          </span>
+        </button>
+      </li>
+    )
   }
+
   return (
     <li>
-      <Link to={para} replace={substituir} className="flex items-center gap-3 px-4 py-3 active:bg-cartao-2">
-        <div className={`min-w-0 flex-1 ${ex.arquivado ? 'opacity-55' : ''}`}>
-          <div className="truncate font-medium">
-            {ex.nome}
-          </div>
-          <div className={`truncate text-sm ${hoje ? 'text-acento' : 'text-fraco'}`}>
-            {ex.arquivado && <span className="mr-1.5 rounded-md bg-cartao-2 px-1.5 py-0.5 text-xs">arquivado</span>}
-            {detalhe}
-          </div>
-        </div>
-        {/* tempo desde a última vez (feito hoje mostra ✓) */}
-        {!hoje && ex.ultima_em && <TempoDesde desde={ex.ultima_em} />}
+      <Link to={para ?? ''} replace={substituir} className="flex items-center gap-3 px-4 py-3 active:bg-cartao-2">
+        {info}
+        {desde}
         {hoje ? <span className="text-xl text-acento">✓</span> : <span className="text-2xl text-fraco">›</span>}
       </Link>
     </li>
