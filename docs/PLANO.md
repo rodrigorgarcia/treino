@@ -48,7 +48,7 @@ Um app de celular para registrar o treino **durante** o treino, com o mínimo de
 
 ### 4.1 Início
 
-- Sem sessão aberta: botão grande **Iniciar sessão** e, abaixo, "último treino há N dias" e as últimas sessões.
+- Sem sessão aberta: dois botões, **Treino livre** e **Treino programado** (ver 4.7), e, abaixo, "último treino há N dias" e as últimas sessões.
 - Com sessão aberta: **Continuar sessão**, com o tempo decorrido. Se a sessão foi aberta há mais de 6 h, o app pergunta se você quer encerrá-la (caso tenha esquecido de fechar).
 
 ### 4.2 Sessão em andamento (navegação)
@@ -134,6 +134,7 @@ Resumo das séries: se todas são iguais, `3×12 · 30 kg`. Se as reps variam, `
 - Resumo com a duração e os exercícios feitos, cada um com suas séries.
 - Título sugerido pelas regiões treinadas (Superiores, Inferiores ou Misto, mais "+ Cardio" se houver), que você pode editar. Objetivo e observação são opcionais.
 - Ao confirmar, a sessão é encerrada.
+- No treino programado, só encerra sem exercício zerado: a tela lista os que faltam fazer, para fazer ou tirar do treino.
 
 ### 4.5 Consulta
 
@@ -150,6 +151,19 @@ Resumo das séries: se todas são iguais, `3×12 · 30 kg`. Se as reps variam, `
 - **Aparelho**: nome, passo e observação (ex.: "vai até 100 kg, de 10 em 10").
 - **Onde editar**: "Editar" no histórico do exercício, "editar" na tela de log (para acertar o passo no meio do treino) e "Aparelhos" na tela de exercícios. Exercício novo pode ser criado na sessão ou na tela de exercícios.
 - **Excluir** só vale para exercício nunca feito e aparelho sem exercícios; o banco recusa o resto. Para um exercício já feito, use arquivar. Trocar o tipo de carga de um exercício já feito não muda os números gravados, só como aparecem (o app avisa).
+
+### 4.7 Treino programado
+
+A sessão de sempre é o **treino livre**: os exercícios entram conforme você faz. No **treino programado**, você monta a lista antes e vai preenchendo.
+
+- **Montar treino:** o catálogo, com busca, regiões e badges, em que tocar marca ou desmarca. Cada marcado mostra a ordem (1, 2, 3…), e a barra de baixo lista os escolhidos (tocar desmarca). **Começar treino** cria a sessão, e o cronômetro começa aí.
+- **Sessão:** a lista na ordem marcada, com o progresso ("3 de 6 feitos"). Cada exercício mostra o estado: vazio (número), falta "como foi?" ou ✓, e o que foi feito hoje ou a última vez. Tocar abre a tela de registro de sempre.
+- **Agrupar por** Nenhum, Grupo ou Aparelho, acima da lista. Agrupado, as seções seguem a ordem em que aparecem no treino e cada exercício mantém o número da sua posição. O app lembra a escolha.
+- **Tirar:** deslizar o exercício para a esquerda mostra **Tirar**. Vazio sai na hora; com séries, o app confirma antes de apagar.
+- **+ Adicionar exercícios:** a mesma tela de montar. Os que já estão no treino aparecem marcados, e os novos entram no fim.
+- **Encerrar:** bloqueado enquanto houver exercício zerado ou sem "Como foi?".
+- **Banco:** `sessoes.modalidade` (`livre` ou `programado`, migração `20261021120000`). O exercício planejado é um `sessao_exercicios` sem séries, e a ordem é a de `iniciado_em` (cada um entra 1 ms depois do anterior). A "última vez", os gráficos e a badge já ignoram registros sem séries.
+- **Histórico:** sessões programadas têm a etiqueta "programado" na lista e no detalhe.
 
 ## 5. Modelo de dados
 
@@ -392,7 +406,7 @@ Backlog (fase 4):
 ## 10. Fora da v1
 
 - **Recomendação de carga** (decidido).
-- **Rotinas e planejamento** (decidido: sessão livre). O modelo aceita rotinas depois sem mudar as tabelas atuais.
+- **Rotinas salvas** (modelos como "Ombro A"). O treino programado (4.7) monta a lista na hora; modelos e metas por exercício ficam para depois.
 - **Modo offline** (decidido: a internet na academia é boa).
 - **Volume/tonelagem.** Com `kg/lado`, `+kg` e reps por lado, essa conta engana fácil. Fica para quando houver gráficos.
 

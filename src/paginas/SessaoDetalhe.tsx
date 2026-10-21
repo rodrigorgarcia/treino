@@ -35,6 +35,7 @@ export default function SessaoDetalhe() {
             <p className="mb-4 text-suave">
               {dataLonga(sessao.iniciada_em)}
               {minutos > 0 && ` · ${formatarDuracao(minutos)}`} · {contarExercicios(sessao.n_exercicios)}
+              {sessao.modalidade === 'programado' && <span className="ml-2 rounded-md bg-cartao-2 px-1.5 py-0.5 text-xs">programado</span>}
             </p>
 
             {sessao.objetivo && (

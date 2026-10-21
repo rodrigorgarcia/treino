@@ -108,7 +108,10 @@ function CartaoSessao({ s }: { s: ResumoSessao }) {
       <Link to={`/sessoes/${s.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-cartao-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-3 text-sm text-suave">
-            <span className="tabular-nums">{diaSemanaCurto(s.iniciada_em)}</span>
+            <span className="tabular-nums">
+              {diaSemanaCurto(s.iniciada_em)}
+              {s.modalidade === 'programado' && <span className="ml-1.5 rounded-md bg-cartao-2 px-1.5 py-0.5 text-xs">programado</span>}
+            </span>
             <span>
               {contarExercicios(s.n_exercicios)}{minutos > 0 && ` · ${formatarDuracao(minutos)}`}
             </span>

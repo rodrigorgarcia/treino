@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { Deslizavel } from '../componentes/Deslizavel'
 import { BotaoPrimario, BotaoSecundario, Cabecalho, Carregando, Cronometro, Erro, Pagina, Rotulo } from '../componentes/ui'
 import { mensagemDeErro, useCatalogo, useDescartarSessao, useEncerrarSessao, useExecucoes } from '../lib/api'
 import { contarExercicios, resumoSeries, rotuloDificuldade, tituloSugerido } from '../lib/formato'
+import { ItemDoTreinoLinha } from './SessaoProgramada'
 import { useSessao } from './useSessao'
+import { useTirarDoTreino } from './useTreino'
 
 export default function Encerrar() {
   const sessao = useSessao()
@@ -12,6 +15,7 @@ export default function Encerrar() {
   const execucoes = useExecucoes(sessao.id)
   const encerrar = useEncerrarSessao()
   const descartar = useDescartarSessao()
+  const tirar = useTirarDoTreino(sessao.id)
 
   const [titulo, setTitulo] = useState<string | null>(sessao.titulo)
   const [objetivo, setObjetivo] = useState(sessao.objetivo ?? '')
@@ -28,7 +32,15 @@ export default function Encerrar() {
     })
   const sugerido = tituloSugerido(feitos.map((f) => f.ex.regiao))
   const semDificuldade = feitos.filter((f) => !f.x.dificuldade) // "Como foi?" é obrigatório
-  const erro = encerrar.error ?? descartar.error ?? catalogo.error ?? execucoes.error
+  // Treino programado: só encerra sem exercício zerado (fazer ou tirar do treino).
+  const zerados =
+    sessao.modalidade === 'programado'
+      ? (execucoes.data ?? []).flatMap((x, i) => {
+          const ex = porId.get(x.exercicio_id)
+          return ex && x.n_series === 0 ? [{ x, ex, numero: i + 1 }] : []
+        })
+      : []
+  const erro = encerrar.error ?? descartar.error ?? tirar.erro ?? catalogo.error ?? execucoes.error
   const campo = 'w-full rounded-xl border border-borda bg-cartao px-4 py-3 outline-none focus:border-acento'
 
   return (
@@ -56,6 +68,24 @@ export default function Encerrar() {
           </section>
         ) : (
           <>
+            {zerados.length > 0 && (
+              <section className="mb-6 rounded-2xl border border-alerta/40 bg-alerta/10 p-4" data-testid="zerados">
+                <div className="mb-1 font-medium text-alerta">Falta fazer</div>
+                <p className="mb-3 text-sm text-suave">
+                  Para encerrar, faça cada um ou tire do treino (deslize para a esquerda):
+                </p>
+                <ul className="divide-y divide-borda overflow-hidden rounded-xl border border-alerta/40 bg-cartao">
+                  {zerados.map((item) => (
+                    <li key={item.x.id}>
+                      <Deslizavel {...tirar.linha(item)}>
+                        <ItemDoTreinoLinha item={item} numero={item.numero} />
+                      </Deslizavel>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {semDificuldade.length > 0 && (
               <section className="mb-6 rounded-2xl border border-alerta/40 bg-alerta/10 p-4" data-testid="sem-dificuldade">
                 <div className="mb-1 font-medium text-alerta">Falta dizer como foi</div>
@@ -104,7 +134,7 @@ export default function Encerrar() {
             </div>
 
             <BotaoPrimario
-              disabled={encerrar.isPending || semDificuldade.length > 0}
+              disabled={encerrar.isPending || semDificuldade.length > 0 || zerados.length > 0}
               onClick={() =>
                 encerrar.mutate(
                   {

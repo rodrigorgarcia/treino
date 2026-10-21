@@ -1,6 +1,6 @@
 // Texto exibido no app, no mesmo jeito de escrever do log: "12+10+8 · 57 kg", "+60 kg", "10/perna".
 
-import type { DetalheExercicio, Dificuldade, Regiao, TipoExercicio } from './tipos'
+import type { DetalheExercicio, Dificuldade, Execucao, ItemCatalogo, Regiao, TipoExercicio } from './tipos'
 
 const FUSO = 'America/Sao_Paulo'
 
@@ -119,6 +119,21 @@ export function resumoSeries(ex: InfoExercicio, s: Series): string {
     else blocos.push({ reps: [rep], carga })
   })
   return blocos.map((b) => `${resumoReps(b.reps)}${lado} · ${formatarCarga(b.carga, ex.tipo)}`).join(' → ')
+}
+
+// Linha de baixo de cada exercício: o que foi feito hoje, senão a última vez.
+export function detalheExercicio(ex: ItemCatalogo, hoje?: Execucao): string {
+  if (hoje) {
+    return 'hoje: ' + resumoSeries(ex, { reps: hoje.reps, cargas: hoje.cargas_kg, duracao_s: hoje.duracao_s, distancia_m: hoje.distancia_m, andares: hoje.andares })
+  }
+  if (!ex.ultima_em) return 'nunca feito'
+  return `${dataCurta(ex.ultima_em)} · ` + resumoSeries(ex, {
+    reps: ex.ultima_reps ?? [],
+    cargas: ex.ultima_cargas_kg ?? [],
+    duracao_s: ex.ultima_duracao_s,
+    distancia_m: ex.ultima_distancia_m,
+    andares: ex.ultima_andares,
+  })
 }
 
 // Exercício no detalhe da sessão (séries vindas da tabela), no mesmo formato.
