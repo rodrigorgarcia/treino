@@ -8,8 +8,6 @@ export const DIFICULDADES: { valor: Dificuldade; rotulo: string }[] = [
   { valor: 'facil', rotulo: 'Fácil' },
   { valor: 'na_medida', rotulo: 'Na medida' },
   { valor: 'dificil', rotulo: 'Difícil' },
-  { valor: 'muito_dificil', rotulo: 'Muito difícil' },
-  { valor: 'falha', rotulo: 'Falha' },
 ]
 
 export const REGIOES: { valor: Regiao; rotulo: string }[] = [
@@ -219,17 +217,19 @@ export function diasDesde(iso: string, agora = new Date()): number {
 
 export type FaixaTempo = 'dias' | 'semanas' | 'longe'
 
+// Faixa (e cor) da badge: até 7 dias, até 4 semanas, mais que isso.
+export function faixaDoTempo(dias: number): FaixaTempo {
+  return dias <= 7 ? 'dias' : Math.floor(dias / 7) <= 4 ? 'semanas' : 'longe'
+}
+
 // Tempo desde a última vez, para a badge: até 7 dias em dias ("3d"); depois, em semanas
 // completas ("1s" de 8 a 13 dias, "2s" de 14 a 20…). A faixa dá a cor: dias, até 4 semanas, mais que isso.
 export function tempoDesde(iso: string, agora = new Date()): { curto: string; longo: string; faixa: FaixaTempo } {
   const dias = diasDesde(iso, agora)
-  if (dias <= 7) return { curto: `${dias}d`, longo: dias === 1 ? '1 dia' : `${dias} dias`, faixa: 'dias' }
+  const faixa = faixaDoTempo(dias)
+  if (dias <= 7) return { curto: `${dias}d`, longo: dias === 1 ? '1 dia' : `${dias} dias`, faixa }
   const semanas = Math.floor(dias / 7)
-  return {
-    curto: `${semanas}s`,
-    longo: semanas === 1 ? '1 semana' : `${semanas} semanas`,
-    faixa: semanas <= 4 ? 'semanas' : 'longe',
-  }
+  return { curto: `${semanas}s`, longo: semanas === 1 ? '1 semana' : `${semanas} semanas`, faixa }
 }
 
 // Cronômetro em horas e minutos: "0:42", "1:05".

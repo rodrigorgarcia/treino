@@ -32,7 +32,7 @@ Um app de celular para registrar o treino **durante** o treino, com o mínimo de
 | A carga também muda entre séries às vezes: `25 kg + 30 kg (última série)` | Cada série tem a sua carga. |
 | Quatro jeitos de anotar carga: `30 kg`, `15 kg/lado` (58 linhas), `+50 kg` (29 linhas), `15 kg total` | Cada exercício tem um **tipo de carga** que define como o número aparece. O app escreve do jeito que você já escreve. |
 | 9 linhas com reps por lado: `6/perna`, `10+8+6/lado` | Opção "reps por lado" no exercício. |
-| Dificuldade: Difícil 156×, Na medida 122×, Fácil 8×, Até a falha 3×, Muito difícil 1× | Escala de 5 níveis, marcada **uma vez por exercício** (não por série), com fácil acesso a "Na medida" e "Difícil". |
+| Dificuldade: Difícil 156×, Na medida 122×, Fácil 8×, Até a falha 3×, Muito difícil 1× | Marcada **uma vez por exercício** (não por série). Começou com 5 níveis; desde 22/10/2026 são 3 (Fácil, Na medida, Difícil), e "Muito difícil" e "Falha" viraram Difícil. |
 | Cada aparelho sobe de um jeito: Extensora de 10 em 10, halteres de 1 em 1, cabo de 5 em 5, chest press 14 → 15 → 16 kg/lado | O passo do **+ / −** de carga vem do aparelho, com ajuste por exercício. |
 | 80 nomes diferentes para ~54 exercícios (`Puxada alta`, `Puxada aberta`, `Puxada alta (pegada aberta)`…) | **Catálogo fixo**: você escolhe da lista em vez de digitar o nome. |
 | Só 7 dos 54 exercícios aparecem na 1ª sessão; os outros 47 foram estreando ao longo dos meses (⭐) | Criar exercício novo **no meio da sessão**, com poucos campos. |
@@ -74,7 +74,9 @@ POSTERIOR
 ```
 
 - **Abas por região** (Superiores · Inferiores · Core · Cardio). Dentro de cada aba, seções por grupo (Peito, Costas…), com os exercícios em ordem alfabética.
-- **Agrupar por aparelho** (Cross Cable, Halteres, Leg press…) para os treinos por bloco.
+- **Agrupar por** Grupo, Aparelho ou Tempo, logo abaixo da busca (não muda de lugar ao trocar).
+  - **Aparelho** (Cross Cable, Halteres, Leg press…), para os treinos por bloco, com o catálogo inteiro.
+  - **Tempo** usa as faixas da badge: Até 7 dias · De 1 a 4 semanas · Mais de 4 semanas · Nunca feito, do mais recente ao mais antigo. Respeita a região e o subgrupo escolhidos. Na sessão, o feito hoje conta como 0 dias.
 - **Busca** por nome.
 - Cada linha mostra a **última execução** em uma linha curta. O que já foi feito hoje ganha ✓ e aparece em "Feitos hoje".
 - **+ Novo exercício**: nome, grupo, aparelho e tipo de carga. Depois de criado, já abre para registrar.
@@ -101,7 +103,7 @@ HOJE
    2   10 × 57 kg                          editar
 ──────────────────────────────────────────────────
 COMO FOI?
-   Fácil · Na medida · [Difícil] · Muito difícil · Falha
+   Fácil · Na medida · [Difícil]
    Observação (opcional)
             [   Concluir exercício   ]
 ```
@@ -208,7 +210,7 @@ erDiagram
   }
   sessao_exercicios {
     timestamptz iniciado_em "ordem na sessao"
-    dificuldade dificuldade "facil ... falha"
+    dificuldade dificuldade "facil, na_medida ou dificil"
     text observacao
   }
   series {
@@ -349,7 +351,7 @@ Regras de conversão:
   | `3x5~8` (S36) | 5, 5, 5, com "entre 5 e 8 reps" na observação |
 
 - **Carga:** `+40 kg` → 40; `14 kg/lado (28 kg total)` → 14; `15 kg total` → 15. `2+1` com `25 kg + 30 kg (última série)` → duas séries de 25 e uma de 30. Supino máquina S1–S4: `20 kg` era o total → 10 kg/lado.
-- **Dificuldade.** O começo do texto vira o nível, e o resto vai para a observação: `Difícil (caiu na última)` → difícil + "caiu na última". `Irregular`, `Pirâmide` e `Interrompido (…)` ficam sem nível, com o texto na observação.
+- **Dificuldade.** O começo do texto vira o nível, e o resto vai para a observação: `Difícil (caiu na última)` → difícil + "caiu na última". `Irregular`, `Pirâmide` e `Interrompido (…)` ficam sem nível, com o texto na observação. "Até a falha" e "Muito difícil" (4 exercícios) entram como Difícil, como manda a migração `20261022120000`.
 - **"Não realizado"** não gera registro. Esses nomes entram na observação da sessão ("Não realizados: Stiff").
 - **Cardio.** Duração, distância e andares viram uma série de Corrida ou Climbmill. O protocolo de intervalos vai para a observação.
 - **"Próxima Carga Recomendada"** é descartada, porque o app não terá recomendação. Só dois trechos com fato vão para a observação do exercício: a correção da Extensora (S11, 35 → 37 kg) e "máquina não tinha 20 kg" (S13). As estreias já estão nas notas da sessão.

@@ -1,11 +1,24 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { REGIOES, detalheExercicio } from '../lib/formato'
+import { REGIOES, detalheExercicio, diasDesde, faixaDoTempo, type FaixaTempo } from '../lib/formato'
 import { lerPreferencia, salvarPreferencia } from '../lib/preferencias'
 import type { Execucao, ItemCatalogo, Regiao } from '../lib/tipos'
 import { Carregando, Chip, Rotulo, TempoDesde } from './ui'
 
-type Modo = 'grupo' | 'aparelho'
+type Modo = 'grupo' | 'aparelho' | 'tempo'
+const MODOS: [Modo, string][] = [
+  ['grupo', 'Grupo'],
+  ['aparelho', 'Aparelho'],
+  ['tempo', 'Tempo'],
+]
+
+// Agrupar por tempo desde a última vez: as faixas da badge, nesta ordem.
+const FAIXAS: [FaixaTempo | 'nunca', string][] = [
+  ['dias', 'Até 7 dias'],
+  ['semanas', 'De 1 a 4 semanas'],
+  ['longe', 'Mais de 4 semanas'],
+  ['nunca', 'Nunca feito'],
+]
 
 // Por nome, com os arquivados no fim de cada grupo.
 const porNome = (a: ItemCatalogo, b: ItemCatalogo) =>
@@ -28,8 +41,8 @@ interface Props {
   rodape?: (regiao: Regiao) => ReactNode
 }
 
-// Catálogo navegável: busca, regiões, subgrupos e agrupamento por grupo ou aparelho,
-// com a última execução em cada linha. Usado na sessão e na tela de exercícios.
+// Catálogo navegável: busca, regiões, subgrupos e agrupamento por grupo, aparelho ou tempo desde
+// a última vez, com a última execução em cada linha. Usado na sessão e na tela de exercícios.
 export function ListaExercicios({ catalogo, carregando, link, escolha, substituir = false, feitos, rodape }: Props) {
   const [aba, setAba] = useState<Regiao>(() => lerPreferencia('treino.aba', 'superiores'))
   const [modo, setModo] = useState<Modo>(() => lerPreferencia('treino.modo', 'grupo'))
@@ -55,9 +68,23 @@ export function ListaExercicios({ catalogo, carregando, link, escolha, substitui
     if (termo) {
       return [{ titulo: 'Resultados', itens: lista.filter((e) => e.nome.toLocaleLowerCase('pt-BR').includes(termo)).sort(porNome) }]
     }
+    // Por grupo e por tempo, só a região (e o subgrupo) escolhidos; por aparelho, tudo.
+    const visiveis = modo === 'aparelho' ? lista : lista.filter((e) => e.regiao === aba && (!filtroGrupo || e.grupo === filtroGrupo))
+    if (modo === 'tempo') {
+      // Do mais recente ao mais antigo; o feito hoje na sessão conta como 0 dias.
+      const dias = (e: ItemCatalogo) => (feitos?.has(e.id) ? 0 : e.ultima_em ? diasDesde(e.ultima_em) : null)
+      return FAIXAS.map(([faixa, titulo]) => ({
+        titulo,
+        itens: visiveis
+          .filter((e) => {
+            const d = dias(e)
+            return d === null ? faixa === 'nunca' : faixaDoTempo(d) === faixa
+          })
+          .sort((a, b) => (dias(a) ?? 0) - (dias(b) ?? 0) || porNome(a, b)),
+      })).filter((s) => s.itens.length > 0)
+    }
     const mapa = new Map<string, { titulo: string; ordem: number | string; itens: ItemCatalogo[] }>()
-    for (const e of lista) {
-      if (modo === 'grupo' && (e.regiao !== aba || (filtroGrupo && e.grupo !== filtroGrupo))) continue
+    for (const e of visiveis) {
       const titulo = modo === 'grupo' ? e.grupo : (e.aparelho ?? 'Sem aparelho')
       const ordem = modo === 'grupo' ? e.grupo_ordem : titulo
       if (!mapa.has(titulo)) mapa.set(titulo, { titulo, ordem, itens: [] })
@@ -66,7 +93,7 @@ export function ListaExercicios({ catalogo, carregando, link, escolha, substitui
     return [...mapa.values()]
       .sort((a, b) => (typeof a.ordem === 'number' && typeof b.ordem === 'number' ? a.ordem - b.ordem : String(a.ordem).localeCompare(String(b.ordem), 'pt-BR')))
       .map((s) => ({ ...s, itens: s.itens.sort(porNome) }))
-  }, [catalogo, busca, modo, aba, filtroGrupo])
+  }, [catalogo, busca, modo, aba, filtroGrupo, feitos])
 
   return (
     <>
@@ -81,9 +108,25 @@ export function ListaExercicios({ catalogo, carregando, link, escolha, substitui
 
       {!busca && (
         <div className="mb-4 space-y-3">
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-            {modo === 'grupo' &&
-              REGIOES.map((r) => (
+          <div className="flex items-center gap-2 text-sm text-fraco">
+            Agrupar por
+            {MODOS.map(([m, rotulo]) => (
+              <button
+                key={m}
+                aria-pressed={modo === m}
+                onClick={() => {
+                  setModo(m)
+                  salvarPreferencia('treino.modo', m)
+                }}
+                className={`rounded-lg px-2 py-1 ${modo === m ? 'bg-cartao-2 text-texto' : ''}`}
+              >
+                {rotulo}
+              </button>
+            ))}
+          </div>
+          {modo !== 'aparelho' && (
+            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+              {REGIOES.map((r) => (
                 <Chip
                   key={r.valor}
                   ativo={aba === r.valor}
@@ -96,8 +139,9 @@ export function ListaExercicios({ catalogo, carregando, link, escolha, substitui
                   {r.rotulo}
                 </Chip>
               ))}
-          </div>
-          {modo === 'grupo' && subgrupos.length > 1 && (
+            </div>
+          )}
+          {modo !== 'aparelho' && subgrupos.length > 1 && (
             <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
               <Chip pequeno ativo={!filtroGrupo} onClick={() => escolherSubgrupo(null)}>
                 Todos
@@ -109,22 +153,6 @@ export function ListaExercicios({ catalogo, carregando, link, escolha, substitui
               ))}
             </div>
           )}
-          <div className="flex items-center gap-2 text-sm text-fraco">
-            Agrupar por
-            {(['grupo', 'aparelho'] as const).map((m) => (
-              <button
-                key={m}
-                aria-pressed={modo === m}
-                onClick={() => {
-                  setModo(m)
-                  salvarPreferencia('treino.modo', m)
-                }}
-                className={`rounded-lg px-2 py-1 ${modo === m ? 'bg-cartao-2 text-texto' : ''}`}
-              >
-                {m === 'grupo' ? 'Grupo' : 'Aparelho'}
-              </button>
-            ))}
-          </div>
         </div>
       )}
 
