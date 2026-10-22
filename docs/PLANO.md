@@ -74,7 +74,9 @@ POSTERIOR
 ```
 
 - **Abas por região** (Superiores · Inferiores · Core · Cardio). Dentro de cada aba, seções por grupo (Peito, Costas…), com os exercícios em ordem alfabética.
-- **Agrupar por aparelho** (Cross Cable, Halteres, Leg press…) para os treinos por bloco.
+- **Agrupar por** Grupo, Aparelho ou Tempo, logo abaixo da busca (não muda de lugar ao trocar).
+  - **Aparelho** (Cross Cable, Halteres, Leg press…), para os treinos por bloco, com o catálogo inteiro.
+  - **Tempo** usa as faixas da badge: Até 7 dias · De 1 a 4 semanas · Mais de 4 semanas · Nunca feito, do mais recente ao mais antigo. Respeita a região e o subgrupo escolhidos. Na sessão, o feito hoje conta como 0 dias.
 - **Busca** por nome.
 - Cada linha mostra a **última execução** em uma linha curta. O que já foi feito hoje ganha ✓ e aparece em "Feitos hoje".
 - **+ Novo exercício**: nome, grupo, aparelho e tipo de carga. Depois de criado, já abre para registrar.
