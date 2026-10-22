@@ -8,8 +8,6 @@ export const DIFICULDADES: { valor: Dificuldade; rotulo: string }[] = [
   { valor: 'facil', rotulo: 'Fácil' },
   { valor: 'na_medida', rotulo: 'Na medida' },
   { valor: 'dificil', rotulo: 'Difícil' },
-  { valor: 'muito_dificil', rotulo: 'Muito difícil' },
-  { valor: 'falha', rotulo: 'Falha' },
 ]
 
 export const REGIOES: { valor: Regiao; rotulo: string }[] = [

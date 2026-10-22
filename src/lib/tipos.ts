@@ -2,7 +2,7 @@
 
 export type Regiao = 'superiores' | 'inferiores' | 'core' | 'cardio'
 export type TipoExercicio = 'carga' | 'carga_por_lado' | 'carga_adicional' | 'peso_corporal' | 'cardio'
-export type Dificuldade = 'facil' | 'na_medida' | 'dificil' | 'muito_dificil' | 'falha'
+export type Dificuldade = 'facil' | 'na_medida' | 'dificil' // muito_dificil e falha viraram dificil (migração 20261022120000)
 
 // livre: os exercícios entram conforme são feitos. programado: a sessão começa com uma lista
 // escolhida antes (exercícios ainda sem séries) e só encerra sem nenhum zerado.
