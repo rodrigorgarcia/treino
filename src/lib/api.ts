@@ -1,6 +1,7 @@
 // Leitura e escrita no Supabase, com cache do TanStack Query.
 
 import { useMutation, useQuery, useQueryClient, type QueryClient, type QueryKey } from '@tanstack/react-query'
+import { juntarNota } from './formato'
 import { supabase } from './supabase'
 import type {
   Aparelho, AparelhoComExercicios, DetalheExercicio, Dificuldade, Execucao, Exercicio, Grupo, ItemCatalogo, Registro,
@@ -362,6 +363,25 @@ export function useApagarSerie(sessaoId: string, exercicioId: string) {
   return useMutation({
     mutationFn: (id: string) => rodar(supabase.from('series').delete().eq('id', id)),
     onSettled: () => aposMudarRegistro(qc, sessaoId, exercicioId),
+  })
+}
+
+// Acrescenta um texto à nota fixa do exercício (a observação de um treino que vale para sempre).
+// Lê a nota atual do banco antes, para nunca sobrescrever o que já está lá.
+export function useAcrescentarNota() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ exercicioId, texto }: { exercicioId: string; texto: string }) => {
+      const { nota } = await rodar<{ nota: string | null }>(supabase.from('exercicios').select('nota').eq('id', exercicioId).single())
+      const nova = juntarNota(nota, texto)
+      if (nova !== nota) await rodar(supabase.from('exercicios').update({ nota: nova }).eq('id', exercicioId))
+    },
+    onSuccess: (_, { exercicioId }) =>
+      Promise.all(
+        [chaves.catalogo, chaves.exercicio(exercicioId), chaves.exercicioEdicao(exercicioId)].map((queryKey) =>
+          qc.invalidateQueries({ queryKey }),
+        ),
+      ),
   })
 }
 

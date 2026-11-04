@@ -30,6 +30,15 @@ export function contarExercicios(n: number): string {
   return `${n} ${n === 1 ? 'exercício' : 'exercícios'}`
 }
 
+// Nota fixa do exercício com mais um texto no fim, em linha nova. Nunca substitui o que já
+// está lá, e um texto que a nota já contém não se repete.
+export function juntarNota(nota: string | null, texto: string): string {
+  const atual = nota?.trim() ?? ''
+  if (!atual) return texto
+  if (atual.includes(texto)) return atual
+  return `${atual}\n${texto}`
+}
+
 export function rotuloDificuldade(d: Dificuldade | null): string | null {
   return DIFICULDADES.find((x) => x.valor === d)?.rotulo ?? null
 }

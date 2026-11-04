@@ -13,6 +13,9 @@ export default function Aparelhos() {
       <Pagina>
         <Erro>{aparelhos.error && mensagemDeErro(aparelhos.error)}</Erro>
         <p className="mb-4 text-sm text-suave">O passo é quanto os botões + / − mudam a carga nos exercícios do aparelho.</p>
+        <BotaoSecundario className="mb-4 w-full" onClick={() => navigate('/aparelhos/novo')}>
+          + Novo aparelho
+        </BotaoSecundario>
         {aparelhos.isPending ? (
           <Carregando />
         ) : (
@@ -36,9 +39,6 @@ export default function Aparelhos() {
             })}
           </ul>
         )}
-        <BotaoSecundario className="mt-4 w-full" onClick={() => navigate('/aparelhos/novo')}>
-          + Novo aparelho
-        </BotaoSecundario>
       </Pagina>
     </>
   )
