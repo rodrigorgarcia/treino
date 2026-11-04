@@ -116,7 +116,7 @@ Regras:
 - **Hoje.** As séries registradas ficam listadas. Tocar numa delas permite corrigir ou apagar.
 - **Última vez**, em letra menor e cor neutra: data, há quantos dias, séries, dificuldade e observação. Ao lado de cada série aparece o valor da mesma série na última vez.
 - **Nota fixa** do exercício (ex.: ⚠️ virilha) aparece no topo, em destaque.
-- **Concluir.** Você marca a dificuldade e, se quiser, uma observação, e volta para a navegação.
+- **Concluir.** Você marca a dificuldade e, se quiser, uma observação, e volta para a navegação. Marcando **Adicionar à nota do exercício** (abaixo da observação), o texto também entra no fim da nota fixa, em linha nova: nunca substitui o que já está lá, e um texto que a nota já tem não se repete.
 - **Cardio.** Os controles viram duração (min), distância (km) e, no climbmill, andares.
 
 Formatos de exibição:

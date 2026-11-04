@@ -199,7 +199,7 @@ export default function ExercicioHistorico() {
             Arquivado: não aparece na lista da sessão. Reative para voltar a usar.
           </p>
         )}
-        {ex.nota && <p className="mb-4 rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm text-alerta">{ex.nota}</p>}
+        {ex.nota && <p className="mb-4 rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm whitespace-pre-line text-alerta">{ex.nota}</p>}
 
         {execs.length === 0 ? (
           <p className="text-fraco">Este exercício ainda não foi feito.</p>

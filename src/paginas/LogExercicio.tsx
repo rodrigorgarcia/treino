@@ -4,7 +4,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { Stepper, StepperTempo } from '../componentes/Stepper'
 import { BotaoPrimario, BotaoSecundario, Cabecalho, Carregando, Chip, Erro, Pagina, Rotulo } from '../componentes/ui'
 import {
-  chaves, mensagemDeErro, useApagarSerie, useAtualizarSerie, useCatalogo, useConcluirExercicio, useExercicio,
+  chaves, mensagemDeErro, useAcrescentarNota, useApagarSerie, useAtualizarSerie, useCatalogo, useConcluirExercicio, useExercicio,
   useRegistrarSerie, useRegistro, useRemoverDaSessao, useSessaoDetalhe, type ValoresSerie,
 } from '../lib/api'
 import {
@@ -123,6 +123,7 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
   const [valores, setValores] = useState<Valores>(() => (editando ? deSerie(editando) : valoresIniciais(ex, series)))
   const [dificuldade, setDificuldade] = useState<Dificuldade | null>(registro?.dificuldade ?? null)
   const [observacao, setObservacao] = useState(registro?.observacao ?? '')
+  const [paraNota, setParaNota] = useState(false) // "Adicionar à nota do exercício"
   // Na sessão em andamento, "Como foi?" é obrigatório para concluir um exercício com séries.
   // (Na correção de sessões passadas não: o histórico importado tem exercícios sem dificuldade.)
   const exigeDificuldade = !passada && series.length > 0
@@ -134,7 +135,8 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
   const apagar = useApagarSerie(sessaoId, ex.id)
   const concluir = useConcluirExercicio(sessaoId, ex.id)
   const remover = useRemoverDaSessao(sessaoId, ex.id)
-  const erro = registrar.error ?? atualizar.error ?? apagar.error ?? concluir.error ?? remover.error
+  const acrescentarNota = useAcrescentarNota()
+  const erro = registrar.error ?? atualizar.error ?? apagar.error ?? concluir.error ?? remover.error ?? acrescentarNota.error
 
   const mudar = (campo: keyof Valores) => (v: number | null) => setValores((atual) => ({ ...atual, [campo]: v }))
   const numeroDaSerie = editando ? editando.numero : series.length + 1
@@ -202,6 +204,15 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
       }
     }
     const obs = observacao.trim() || null
+    // Marcado "Adicionar à nota do exercício": a observação entra no fim da nota fixa antes de sair.
+    if (paraNota && obs) {
+      try {
+        await acrescentarNota.mutateAsync({ exercicioId: ex.id, texto: obs })
+      } catch {
+        return // o erro aparece na tela
+      }
+      setParaNota(false)
+    }
     const mudou = dificuldade !== (registro?.dificuldade ?? null) || obs !== (registro?.observacao ?? null)
     if (passada && registro?.id && series.length === 0) {
       remover.mutate(registro.id, { onSuccess: sair }) // apagou todas as séries: sai da sessão
@@ -237,7 +248,7 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
           </Link>
         </p>
 
-        {ex.nota && <p className="mb-3 rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm text-alerta">{ex.nota}</p>}
+        {ex.nota && <p className="mb-3 rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm whitespace-pre-line text-alerta">{ex.nota}</p>}
         {subir && (
           <p className="mb-3 rounded-xl border border-alerta/40 bg-alerta/10 px-3 py-2 text-sm text-alerta" data-testid="subir-carga">
             ↑ Hora de subir a carga: {resumoReps(subir.reps)}
@@ -378,12 +389,22 @@ function Conteudo({ sessaoId, ex, registro, passada }: { sessaoId: string; ex: I
             value={observacao}
             onChange={(e) => setObservacao(e.target.value)}
             rows={2}
-            className="mb-4 w-full rounded-xl border border-borda bg-cartao px-4 py-3 outline-none focus:border-acento"
+            className="mb-2 w-full rounded-xl border border-borda bg-cartao px-4 py-3 outline-none focus:border-acento"
           />
+          <label className={`mb-4 flex items-center gap-3 text-sm ${observacao.trim() ? 'text-suave' : 'text-fraco opacity-60'}`}>
+            <input
+              type="checkbox"
+              checked={paraNota}
+              disabled={!observacao.trim()}
+              onChange={(e) => setParaNota(e.target.checked)}
+              className="h-5 w-5 shrink-0 accent-acento"
+            />
+            Adicionar à nota do exercício
+          </label>
           <BotaoSecundario
             className="w-full"
             onClick={concluirExercicio}
-            disabled={concluir.isPending || registrar.isPending || atualizar.isPending || remover.isPending || (series.length > 0 && !registro?.id)}
+            disabled={concluir.isPending || registrar.isPending || atualizar.isPending || remover.isPending || acrescentarNota.isPending || (series.length > 0 && !registro?.id)}
           >
             {series.length > 0 ? (passada ? 'Pronto' : 'Concluir exercício') : 'Voltar sem registrar'}
           </BotaoSecundario>
