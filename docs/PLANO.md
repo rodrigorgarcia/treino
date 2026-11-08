@@ -116,7 +116,7 @@ Regras:
 - **Hoje.** As séries registradas ficam listadas. Tocar numa delas permite corrigir ou apagar.
 - **Última vez**, em letra menor e cor neutra: data, há quantos dias, séries, dificuldade e observação. Ao lado de cada série aparece o valor da mesma série na última vez.
 - **Nota fixa** do exercício (ex.: ⚠️ virilha) aparece no topo, em destaque.
-- **Concluir.** Você marca a dificuldade e, se quiser, uma observação, e volta para a navegação.
+- **Concluir.** Você marca a dificuldade e, se quiser, uma observação, e volta para a navegação. Marcando **Adicionar à nota do exercício** (abaixo da observação), o texto também entra no fim da nota fixa, em linha nova: nunca substitui o que já está lá, e um texto que a nota já tem não se repete.
 - **Cardio.** Os controles viram duração (min), distância (km) e, no climbmill, andares.
 
 Formatos de exibição:
@@ -150,7 +150,7 @@ Resumo das séries: se todas são iguais, `3×12 · 30 kg`. Se as reps variam, `
 - **Tempo desde a última vez**: badge nas listas de exercícios, na sessão e na consulta, e no histórico do exercício. Até 7 dias mostra dias ("3d"); depois, semanas completas ("1s" de 8 a 13 dias, "2s" de 14 a 20…). Cor discreta, em tom pastel, por faixa: verde até 7 dias, âmbar até 4 semanas, azul depois disso. Nunca feito: sem badge. Feito hoje na sessão: mostra ✓.
 - **Aviso para subir a carga**: na tela de registro, quando na última vez houve pelo menos duas séries com 12 reps ou mais e mais uma com 10 ou mais, aparece um aviso (no estilo da nota) sugerindo a maior carga daquela vez mais um passo. Some depois de registrar uma série acima dela. Não vale para cardio, peso corporal nem na correção de sessões passadas.
 - **Cronômetro da sessão**: com uma sessão em andamento, o topo de todas as telas mostra o tempo dela em horas e minutos (0:42); tocar leva para a sessão.
-- **Aparelho**: nome, passo e observação (ex.: "vai até 100 kg, de 10 em 10").
+- **Aparelho**: nome, passo e observação (ex.: "vai até 100 kg, de 10 em 10"). Dá para criar um aparelho no próprio formulário do exercício ("+ Novo aparelho", abaixo do campo Aparelho): ele já fica escolhido, sem perder o que foi digitado. Na tela de Aparelhos, o "+ Novo aparelho" fica no topo.
 - **Onde editar**: "Editar" no histórico do exercício, "editar" na tela de log (para acertar o passo no meio do treino) e "Aparelhos" na tela de exercícios. Exercício novo pode ser criado na sessão ou na tela de exercícios.
 - **Excluir** só vale para exercício nunca feito e aparelho sem exercícios; o banco recusa o resto. Para um exercício já feito, use arquivar. Trocar o tipo de carga de um exercício já feito não muda os números gravados, só como aparecem (o app avisa).
 

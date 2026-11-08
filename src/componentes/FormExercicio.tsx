@@ -3,6 +3,7 @@ import type { DadosExercicio } from '../lib/api'
 import { AREA, CAMPO } from '../lib/estilos'
 import { REGIOES, TIPOS, lerNumero, numero } from '../lib/formato'
 import type { Aparelho, Grupo, Regiao, TipoExercicio } from '../lib/tipos'
+import { NovoAparelho } from './NovoAparelho'
 import { BotaoPrimario, Campo } from './ui'
 
 interface Props {
@@ -31,6 +32,7 @@ export function FormExercicio({
   const [porLado, setPorLado] = useState(inicial?.reps_por_lado ?? false)
   const [passo, setPasso] = useState(inicial?.incremento_kg != null ? numero(inicial.incremento_kg) : '')
   const [nota, setNota] = useState(inicial?.nota ?? '')
+  const [criandoAparelho, setCriandoAparelho] = useState(false)
 
   const aparelho = aparelhos.find((a) => a.id === aparelhoId)
   const usaCarga = tipo !== 'cardio' && tipo !== 'peso_corporal'
@@ -79,7 +81,16 @@ export function FormExercicio({
           ))}
         </select>
       </Campo>
-      <Campo rotulo="Aparelho">
+      <Campo
+        rotulo="Aparelho"
+        dica={
+          !criandoAparelho && (
+            <button type="button" onClick={() => setCriandoAparelho(true)} className="font-medium text-acento">
+              + Novo aparelho
+            </button>
+          )
+        }
+      >
         <select value={aparelhoId} onChange={(e) => setAparelhoId(e.target.value)} className={CAMPO}>
           <option value="">Nenhum</option>
           {aparelhos.map((a) => (
@@ -89,6 +100,15 @@ export function FormExercicio({
           ))}
         </select>
       </Campo>
+      {criandoAparelho && (
+        <NovoAparelho
+          onCriado={(id) => {
+            setAparelhoId(id) // já escolhido no exercício
+            setCriandoAparelho(false)
+          }}
+          onCancelar={() => setCriandoAparelho(false)}
+        />
+      )}
       <Campo
         rotulo="Como anotar a carga"
         dica={
