@@ -23,6 +23,16 @@ export default function Exercicios() {
       />
       <Pagina>
         <Erro>{catalogo.error && mensagemDeErro(catalogo.error)}</Erro>
+        <Link
+          to="/exercicios/relatorio"
+          className="mb-4 flex items-center gap-3 rounded-2xl border border-borda bg-cartao px-4 py-3 active:bg-cartao-2"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="font-medium">Relatório de carga e repetições</div>
+            <div className="text-sm text-fraco">Semanal ou mensal, todos os grupos somados</div>
+          </div>
+          <span className="text-2xl text-fraco">›</span>
+        </Link>
         <ListaExercicios
           catalogo={catalogo.data}
           carregando={catalogo.isPending}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { passoBonito, type Ponto, type Serie } from '../lib/grafico'
+import { passoAcima, passoBonito, type Ponto, type Serie } from '../lib/grafico'
 
 interface Props {
   pontos: Ponto[] // em ordem cronológica, uma coluna por sessão
@@ -52,7 +52,7 @@ export function GraficoBarrasLinha({ pontos, barras, linha, rotuloBarras, rotulo
   const divisoes = Math.max(1, Math.ceil(maxBarra / passoBarra))
   const topoBarra = passoBarra * divisoes
   const maxLinha = Math.max(...linha.valores.map((v) => v ?? 0), 1)
-  const passoLinha = PASSOS_LINHA.find((p) => p * divisoes >= maxLinha) ?? Math.ceil(maxLinha / divisoes)
+  const passoLinha = PASSOS_LINHA.find((p) => p * divisoes >= maxLinha) ?? passoAcima(maxLinha / divisoes)
   const topoLinha = passoLinha * divisoes
   const yBarra = (v: number) => M.topo + (1 - v / topoBarra) * alturaUtil
   const yLinha = (v: number) => M.topo + (1 - v / topoLinha) * alturaUtil

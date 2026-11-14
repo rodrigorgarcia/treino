@@ -18,6 +18,7 @@ import Login from './paginas/Login'
 import LogExercicio, { LogExercicioPassado } from './paginas/LogExercicio'
 import MontarTreino, { AdicionarAoTreino } from './paginas/MontarTreino'
 import NovoExercicio from './paginas/NovoExercicio'
+import Relatorio from './paginas/Relatorio'
 import Sessao from './paginas/Sessao'
 import SessaoDetalhe from './paginas/SessaoDetalhe'
 import SessaoLayout from './paginas/SessaoLayout'
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="/sessoes/:id/exercicio/:exercicioId" element={<LogExercicioPassado />} />
         <Route path="/exercicios" element={<Exercicios />} />
         <Route path="/exercicios/novo" element={<EditarExercicio />} />
+        <Route path="/exercicios/relatorio" element={<Relatorio />} />
         <Route path="/exercicios/:id" element={<ExercicioHistorico />} />
         <Route path="/exercicios/:id/editar" element={<EditarExercicio />} />
         <Route path="/aparelhos" element={<Aparelhos />} />
