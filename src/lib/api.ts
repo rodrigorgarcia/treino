@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient, type QueryClient, type QueryKey } from '@tanstack/react-query'
 import { juntarNota } from './formato'
+import type { ExecucaoRelatorio } from './relatorio'
 import { supabase } from './supabase'
 import type {
   Aparelho, AparelhoComExercicios, DetalheExercicio, Dificuldade, Execucao, Exercicio, Grupo, ItemCatalogo, Registro,
@@ -38,6 +39,7 @@ export const chaves = {
   historico: ['historico'] as const,
   historicoExercicio: (id: string) => ['historico-exercicio', id] as const,
   sessaoDetalhe: (id: string) => ['sessao-detalhe', id] as const,
+  relatorio: ['relatorio'] as const,
 }
 
 // ─── Leitura ─────────────────────────────────────────────────
@@ -67,6 +69,31 @@ export function useHistorico() {
       rodar<ResumoSessao[]>(
         supabase.from('v_sessoes').select('*').not('encerrada_em', 'is', null).order('iniciada_em', { ascending: false }),
       ),
+  })
+}
+
+// Todas as execuções de sessões encerradas, para o relatório semanal e mensal. Vem em páginas,
+// porque cada resposta do Supabase traz no máximo 1000 linhas.
+export function useRelatorio() {
+  return useQuery({
+    queryKey: chaves.relatorio,
+    queryFn: async () => {
+      const todas: ExecucaoRelatorio[] = []
+      for (let de = 0; ; de += 1000) {
+        const pagina = await rodar<ExecucaoRelatorio[]>(
+          supabase
+            .from('v_execucoes')
+            .select('sessao_id, exercicio_id, sessao_iniciada_em, reps, cargas_kg')
+            .not('sessao_encerrada_em', 'is', null)
+            .gt('n_series', 0)
+            .order('sessao_iniciada_em')
+            .order('id')
+            .range(de, de + 999),
+        )
+        todas.push(...pagina)
+        if (pagina.length < 1000) return todas
+      }
+    },
   })
 }
 
@@ -295,7 +322,7 @@ function aposMudarRegistro(qc: QueryClient, sessaoId: string, exercicioId: strin
   qc.invalidateQueries({ queryKey: chaves.execucoes(sessaoId) })
   for (const queryKey of [
     chaves.sessaoDetalhe(sessaoId), chaves.historico, chaves.sessoesRecentes, chaves.catalogo,
-    chaves.exercicio(exercicioId), chaves.historicoExercicio(exercicioId),
+    chaves.exercicio(exercicioId), chaves.historicoExercicio(exercicioId), chaves.relatorio,
   ]) {
     qc.invalidateQueries({ queryKey, refetchType: 'none' })
   }

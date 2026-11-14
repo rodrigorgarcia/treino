@@ -142,6 +142,9 @@ Resumo das séries: se todas são iguais, `3×12 · 30 kg`. Se as reps variam, `
 
 - **Sessões**: lista com data, título, duração e número de exercícios. Tocar abre o detalhe no formato da tabela do seu log. Tudo é editável: corrigir carga, apagar série, adicionar um exercício esquecido.
 - **Corrigir uma sessão** ("Editar" no detalhe): cada exercício abre a mesma tela de registro, sem a "última vez", e cada série é salva na hora. Dá para incluir um exercício esquecido, tirar um exercício (apagar todas as séries também tira), mudar título, início, duração, objetivo e observações, ou excluir a sessão. A sessão em andamento não entra aqui; ela se corrige na própria sessão.
+- **Relatório de carga e repetições** (no topo da tela de Exercícios): todas as séries de força somadas, de todos os grupos, por **semana** (segunda a domingo) ou **mês**, com a escolha lembrada.
+  - Carga é a soma da carga de cada série; kg/lado conta em dobro, +kg entra como anotado e peso corporal não soma carga. Repetições como anotadas. Cardio fica de fora.
+  - Quadros com a semana (ou o mês) atual e a anterior, gráfico de dois eixos como o do exercício (colunas de repetições, linha de carga; últimas 26 semanas ou 24 meses, com os períodos vazios) e a lista dos períodos com treino.
 - **Histórico do exercício**: aberto pela tela de log ("ver histórico") ou pelo catálogo, com todas as execuções da mais recente para a mais antiga.
 
 ### 4.6 Catálogo

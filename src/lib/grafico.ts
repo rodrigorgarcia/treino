@@ -15,6 +15,12 @@ export interface Serie {
   passos?: number[] // passos permitidos no eixo (ex.: tempo em 15 s, 30 s, 1 min…)
 }
 
+// Menor passo "redondo" (1, 2, 2,5 ou 5 × 10^n) que seja pelo menos `minimo`.
+export function passoAcima(minimo: number): number {
+  const potencia = 10 ** Math.floor(Math.log10(minimo))
+  return ([1, 2, 2.5, 5, 10].find((f) => f * potencia >= minimo) ?? 10) * potencia
+}
+
 // Passo "redondo" (1, 2, 2,5, 5 × 10^n, ou um dos `permitidos`) para ~3 divisões do eixo.
 export function passoBonito(amplitude: number, permitidos?: number[]): number {
   const bruto = amplitude / 3

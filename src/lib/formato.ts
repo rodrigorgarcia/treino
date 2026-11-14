@@ -171,7 +171,7 @@ export function formatarSerie(
 
 // ─── Datas ───────────────────────────────────────────────────
 
-function diaLocal(d: Date): string {
+export function diaLocal(d: Date): string {
   return d.toLocaleDateString('en-CA', { timeZone: FUSO }) // AAAA-MM-DD
 }
 
